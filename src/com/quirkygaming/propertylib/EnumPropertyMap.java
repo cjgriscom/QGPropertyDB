@@ -1,6 +1,7 @@
 package com.quirkygaming.propertylib;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 
 public class EnumPropertyMap<E extends Enum<E>, T> {
@@ -38,27 +39,32 @@ public class EnumPropertyMap<E extends Enum<E>, T> {
 	}
 	
 	private Enum<?>[] getEnumValues(Class<?> enumClass) {
-		try {
-			if (!enumCache.containsKey(enumClass)) {
-				Enum<?>[] vals = (Enum<?>[]) enumClass.getMethod("values").invoke(null);
+		
+		if (!enumCache.containsKey(enumClass)) {
+			Method m;
+			try {
+				m=enumClass.getMethod("values");
+				if (!m.isAccessible()) m.setAccessible(true);
+				Enum<?>[] vals = (Enum<?>[]) m.invoke(null);
 				enumCache.put(enumClass, vals);
 				return vals;
-			} else {
-				return enumCache.get(enumClass);
+			} catch (IllegalArgumentException e) {
+				throw getEx(e, enumClass.getName());
+			} catch (SecurityException e) {
+				throw getEx(e, enumClass.getName());
+			} catch (IllegalAccessException e) {
+				throw getEx(e, enumClass.getName());
+			} catch (InvocationTargetException e) {
+				throw getEx(e, enumClass.getName());
+			} catch (NoSuchMethodException e) {
+				throw getEx(e, enumClass.getName());
+			} catch (ClassCastException e) {
+				throw getEx(e, enumClass.getName());
 			}
-		} catch (IllegalArgumentException e) {
-			throw getEx(e, enumClass.getName());
-		} catch (SecurityException e) {
-			throw getEx(e, enumClass.getName());
-		} catch (IllegalAccessException e) {
-			throw getEx(e, enumClass.getName());
-		} catch (InvocationTargetException e) {
-			throw getEx(e, enumClass.getName());
-		} catch (NoSuchMethodException e) {
-			throw getEx(e, enumClass.getName());
-		} catch (ClassCastException e) {
-			throw getEx(e, enumClass.getName());
+		} else {
+			return enumCache.get(enumClass);
 		}
+		
 	}
 	private RuntimeException getEx(Exception e, String name) {
 		return new RuntimeException("Runtime error while processing enum " + name + " .", e);
