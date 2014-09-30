@@ -16,13 +16,13 @@ public class EnumPropertyMap<E extends Enum<E>, T> {
 	private final int size;
 	private final Object[] items;
 	
-	public EnumPropertyMap(Class<E> enumClass) {
+	protected EnumPropertyMap(Class<E> enumClass) {
 		size = getEnumValues(enumClass).length;
 		items = new Object[size];
 		mainEnumClass = enumClass;
 	}
 	
-	public EnumPropertyMap(Class<E> mainEnumClass, Class<?>... otherEnums) {
+	protected EnumPropertyMap(Class<E> mainEnumClass, Class<?>... otherEnums) {
 		int currentPos = getEnumValues(mainEnumClass).length;
 		
 		multiEnums = true;
@@ -71,7 +71,7 @@ public class EnumPropertyMap<E extends Enum<E>, T> {
 		return new RuntimeException("Runtime error while processing enum " + name, e);
 	}
 
-	public int size() {
+	protected int size() {
 		return size;
 	}
 	
@@ -85,7 +85,7 @@ public class EnumPropertyMap<E extends Enum<E>, T> {
 		return enumKey.ordinal();
 	}
 
-	public T get(E enumKey) {
+	protected T get(E enumKey) {
 		return get(getIndex(enumKey));
 	}
 	@SuppressWarnings("unchecked")
@@ -97,13 +97,13 @@ public class EnumPropertyMap<E extends Enum<E>, T> {
 	protected T set(E enumKey, T value) {
 		return set(getIndex(enumKey), value);
 	}
-	protected T set(int index, T value) {
+	T set(int index, T value) {
 		if (index == -1) return null;
 		items[index] = value;
 		return value;
 	}
 	
-	public void clear() {
+	protected void clear() {
 		for (int i = 0; i < size; i++) {
 			items[i] = null;
 		}
