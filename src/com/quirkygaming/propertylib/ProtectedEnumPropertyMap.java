@@ -70,6 +70,9 @@ public class ProtectedEnumPropertyMap<E extends Enum<E>, T> {
 	private RuntimeException getEx(Exception e, String name) {
 		return new RuntimeException("Runtime error while processing enum " + name, e);
 	}
+	private RuntimeException getCastMismatch(Exception e) {
+		return new RuntimeException("Internal casting mismatch in EnumPropertyMap; check implementation consistancy", e);
+	}
 
 	protected int size() {
 		return size;
@@ -88,18 +91,18 @@ public class ProtectedEnumPropertyMap<E extends Enum<E>, T> {
 	protected T get(Enum<?> enumKey) {
 		return get(getIndex(enumKey));
 	}
-	@SuppressWarnings("unchecked")
+	
 	protected <X> X getAsType(Enum<?> enumKey) {
-		try {
-			return (X) get(getIndex(enumKey));
-		} catch (ClassCastException e) {
-			throw new RuntimeException("Internal casting mismatch in EnumPropertyMap; check implementation consistancy", e);
-		}
+		return get(getIndex(enumKey));
 	}
 	@SuppressWarnings("unchecked")
-	T get(int index) {
+	<X> X get(int index) {
 		if (index == -1) return null;
-		return (T) items[index];
+		try {
+			return (X) items[index];
+		} catch (ClassCastException e) {
+			throw getCastMismatch(e);
+		}
 	}
 	
 	protected T set(Enum<?> enumKey, T value) {
@@ -107,8 +110,12 @@ public class ProtectedEnumPropertyMap<E extends Enum<E>, T> {
 	}
 	<X> X set(int index, X value) {
 		if (index == -1) return null;
-		items[index] = value;
-		return value;
+		try {
+			items[index] = value;
+			return value;
+		} catch (ClassCastException e) {
+			throw getCastMismatch(e);
+		}
 	}
 	
 	protected void clear() {
