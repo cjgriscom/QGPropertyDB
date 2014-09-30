@@ -15,14 +15,10 @@ public class MutableField<T> extends Field<T> {
 		super(null);
 		this.field = field;
 	}
-
-	public void set(T v) {
-		field.setInternal(v);
-	}
-
+	
 	@Override
-	protected void setInternal(T v) {
-		set(v);
+	public void set(T v) {
+		field.set(v);
 	}
 
 	@Override

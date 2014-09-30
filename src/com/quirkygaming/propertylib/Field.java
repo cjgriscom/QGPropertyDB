@@ -11,7 +11,7 @@ public abstract class Field<T> {
 		return new MappedFieldImpl<T>(map, property);
 	}
 	
-	protected abstract void setInternal(T v);
+	protected abstract void set(T v);
 	
 	public abstract T get();
 	
@@ -33,7 +33,7 @@ class FieldImpl<T> extends Field<T> {
 
 	private T field;
 	
-	protected void setInternal(T v) {
+	protected void set(T v) {
 		field = v;
 	}
 	
@@ -54,7 +54,7 @@ class MappedFieldImpl<T> extends Field<T> {
 	}
 
 	@Override
-	protected void setInternal(T v) {
+	protected void set(T v) {
 		map.set(index, v);
 	}
 
