@@ -71,7 +71,7 @@ public class ProtectedEnumPropertyMap<E extends Enum<E>, T> {
 		return new RuntimeException("Runtime error while processing enum " + name, e);
 	}
 	private RuntimeException getCastMismatch(Exception e) {
-		return new RuntimeException("Internal casting mismatch in EnumPropertyMap; check implementation consistancy", e);
+		return new RuntimeException("Internal casting mismatch in EnumPropertyMap; check implementation consistency", e);
 	}
 
 	protected int size() {
