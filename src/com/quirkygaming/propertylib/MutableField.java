@@ -28,4 +28,8 @@ public class MutableField<T> extends Field<T> {
 	public T get() {
 		return field.get();
 	}
+	
+	public Field<T> getImmutable() {
+		return field;
+	}
 }

@@ -13,7 +13,7 @@ public abstract class Field<T> {
 		return new WeakMappedFieldImpl<T>(map, property);
 	}
 	
-	protected abstract void set(T v);
+	abstract void set(T v);
 	
 	public abstract T get();
 	
@@ -34,7 +34,7 @@ class FieldImpl<T> extends Field<T> {
 
 	private T field;
 	
-	protected void set(T v) {
+	void set(T v) {
 		field = v;
 	}
 	
@@ -54,7 +54,7 @@ class MappedFieldImpl<T> extends Field<T> {
 	}
 
 	@Override
-	protected void set(T v) {
+	void set(T v) {
 		map.set(index, v);
 	}
 
@@ -76,7 +76,7 @@ class WeakMappedFieldImpl<T> extends Field<T> {
 	}
 
 	@Override
-	protected void set(T v) {
+	void set(T v) {
 		map.set(index, v);
 	}
 
