@@ -7,15 +7,7 @@ public class MutableField<T> extends Field<T> {
 		return new MutableField<T>(new FieldImpl<T>(initialValue));
 	}
 	
-	public static <T, E extends Enum<E>> MutableField<T> newField(ProtectedEnumPropertyMap<?, T> map, E property) {
-		return new MutableField<T>(new MappedFieldImpl<T>(map, property));
-	}
-	
-	public static <T, E extends Enum<E>> MutableField<T> newWeaklyLinkedField(ProtectedEnumPropertyMap<?, ?> map, E property, Class<T> type) {
-		return new MutableField<T>(new WeakMappedFieldImpl<T>(map, property));
-	}
-	
-	private MutableField(Field<T> field) {
+	MutableField(Field<T> field) {
 		this.field = field;
 	}
 	

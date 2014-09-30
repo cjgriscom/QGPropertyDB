@@ -5,14 +5,6 @@ public abstract class Field<T> {
 		return new FieldImpl<T>(initialValue);
 	}
 	
-	public static <T, E extends Enum<E>> Field<T> newField(ProtectedEnumPropertyMap<?, T> map, E property) {
-		return new MappedFieldImpl<T>(map, property);
-	}
-	
-	public static <T, E extends Enum<E>> Field<T> newWeaklyLinkedField(ProtectedEnumPropertyMap<?, ?> map, E property, Class<T> type) {
-		return new WeakMappedFieldImpl<T>(map, property);
-	}
-	
 	abstract void set(T v);
 	
 	public abstract T get();
@@ -28,7 +20,7 @@ public abstract class Field<T> {
 }
 
 class FieldImpl<T> extends Field<T> {
-	protected FieldImpl(T initialValue) {
+	FieldImpl(T initialValue) {
 		field = initialValue;
 	}
 
@@ -48,7 +40,7 @@ class MappedFieldImpl<T> extends Field<T> {
 	private final int index;
 	private ProtectedEnumPropertyMap<?, T> map;
 	
-	protected <E extends Enum<E>> MappedFieldImpl(ProtectedEnumPropertyMap<?, T> map, E property) {
+	<E extends Enum<E>> MappedFieldImpl(ProtectedEnumPropertyMap<?, T> map, E property) {
 		this.map = map;
 		this.index = map.getIndex(property);
 	}
@@ -70,7 +62,7 @@ class WeakMappedFieldImpl<T> extends Field<T> {
 	private final int index;
 	private ProtectedEnumPropertyMap<?, ?> map;
 	
-	protected <E extends Enum<E>, X extends Object> WeakMappedFieldImpl(ProtectedEnumPropertyMap<?, X> map, E property) {
+	<E extends Enum<E>, X extends Object> WeakMappedFieldImpl(ProtectedEnumPropertyMap<?, X> map, E property) {
 		this.map = map;
 		this.index = map.getIndex(property);
 	}

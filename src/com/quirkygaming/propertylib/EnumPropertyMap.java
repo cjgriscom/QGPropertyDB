@@ -9,6 +9,20 @@ public class EnumPropertyMap<E extends Enum<E>, T> extends ProtectedEnumProperty
 		super(mainEnumClass, otherEnums);
 	}
 	
+	public <N extends Enum<N>> Field<T> getField(N property) {
+		return super.getField(property);
+	}
+	public <X, N extends Enum<N>> Field<X> getWeaklyLinkedField(N property, Class<X> type) {
+		return super.getWeaklyLinkedField(property, type);
+	}
+	
+	public <N extends Enum<N>> MutableField<T> getMutableField(N property) {
+		return super.getMutableField(property);
+	}
+	public <X, N extends Enum<N>> MutableField<X> getWeaklyLinkedMutableField(N property, Class<X> type) {
+		return super.getWeaklyLinkedMutableField(property, type);
+	}
+	
 	public int size() {
 		return super.size();
 	}

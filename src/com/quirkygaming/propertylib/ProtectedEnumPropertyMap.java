@@ -39,6 +39,20 @@ public class ProtectedEnumPropertyMap<E extends Enum<E>, T> {
 		this.mainEnumClass = mainEnumClass;
 	}
 	
+	protected <N extends Enum<N>> Field<T> getField(N property) {
+		return new MappedFieldImpl<T>(this, property);
+	}
+	protected <X, N extends Enum<N>> Field<X> getWeaklyLinkedField(N property, Class<X> type) {
+		return new WeakMappedFieldImpl<X>(this, property);
+	}
+	
+	protected <N extends Enum<N>> MutableField<T> getMutableField(N property) {
+		return new MutableField<T>(new MappedFieldImpl<T>(this, property));
+	}
+	protected <X, N extends Enum<N>> MutableField<X> getWeaklyLinkedMutableField(N property, Class<X> type) {
+		return new MutableField<X>(new WeakMappedFieldImpl<X>(this, property));
+	}
+	
 	private Enum<?>[] getEnumValues(Class<?> enumClass) {
 		
 		if (!enumCache.containsKey(enumClass)) {
