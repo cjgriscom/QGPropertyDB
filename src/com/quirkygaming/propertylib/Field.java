@@ -11,6 +11,10 @@ public abstract class Field<T> {
 		return new MappedFieldImpl<T>(map, property);
 	}
 	
+	public static <T, E extends Enum<E>> Field<T> newWeaklyLinkedField(ProtectedEnumPropertyMap<?, ?> map, E property, Class<T> type) {
+		return new WeakMappedFieldImpl<T>(map, property);
+	}
+	
 	protected abstract void set(T v);
 	
 	public abstract T get();
@@ -61,6 +65,30 @@ class MappedFieldImpl<T> extends Field<T> {
 	@Override
 	public T get() {
 		return map.get(index);
+	}
+	
+}
+
+class WeakMappedFieldImpl<T> extends Field<T> {
+
+	private final int index;
+	private ProtectedEnumPropertyMap<?, ?> map;
+	
+	protected <E extends Enum<E>, X extends Object> WeakMappedFieldImpl(ProtectedEnumPropertyMap<?, X> map, E property) {
+		super(null);
+		this.map = map;
+		this.index = map.getIndex(property);
+	}
+
+	@Override
+	protected void set(T v) {
+		map.set(index, v);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public T get() {
+		return (T) map.get(index);
 	}
 	
 }

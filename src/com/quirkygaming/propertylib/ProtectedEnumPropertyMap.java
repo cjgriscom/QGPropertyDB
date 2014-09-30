@@ -89,6 +89,14 @@ public class ProtectedEnumPropertyMap<E extends Enum<E>, T> {
 		return get(getIndex(enumKey));
 	}
 	@SuppressWarnings("unchecked")
+	protected <X> X getAsType(Enum<?> enumKey) {
+		try {
+			return (X) get(getIndex(enumKey));
+		} catch (ClassCastException e) {
+			throw new RuntimeException("Internal casting mismatch in EnumPropertyMap; check implementation consistancy", e);
+		}
+	}
+	@SuppressWarnings("unchecked")
 	T get(int index) {
 		if (index == -1) return null;
 		return (T) items[index];
@@ -97,7 +105,7 @@ public class ProtectedEnumPropertyMap<E extends Enum<E>, T> {
 	protected T set(Enum<?> enumKey, T value) {
 		return set(getIndex(enumKey), value);
 	}
-	T set(int index, T value) {
+	<X> X set(int index, X value) {
 		if (index == -1) return null;
 		items[index] = value;
 		return value;
