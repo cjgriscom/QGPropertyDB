@@ -7,7 +7,7 @@ public abstract class Field<T> {
 		return new FieldImpl<T>(initialValue);
 	}
 	
-	public static <T, E extends Enum<E>> Field<T> newField(EnumPropertyMap<E, T> map, E property) {
+	public static <T, E extends Enum<E>> Field<T> newField(ProtectedEnumPropertyMap<?, T> map, E property) {
 		return new MappedFieldImpl<T>(map, property);
 	}
 	
@@ -45,9 +45,9 @@ class FieldImpl<T> extends Field<T> {
 class MappedFieldImpl<T> extends Field<T> {
 
 	private final int index;
-	private EnumPropertyMap<?, T> map;
+	private ProtectedEnumPropertyMap<?, T> map;
 	
-	protected <E extends Enum<E>> MappedFieldImpl(EnumPropertyMap<E, T> map, E property) {
+	protected <E extends Enum<E>> MappedFieldImpl(ProtectedEnumPropertyMap<?, T> map, E property) {
 		super(null);
 		this.map = map;
 		this.index = map.getIndex(property);
