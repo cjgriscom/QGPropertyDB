@@ -13,7 +13,7 @@ public class EnumPropertyMap<E extends Enum<E>, T> extends ProtectedEnumProperty
 		return super.getField(property);
 	}
 	public <X, N extends Enum<N>> Field<X> getWeaklyLinkedField(N property) {
-		return super.getWeaklyLinkedField(property);
+		return super.<X, N>getWeaklyLinkedField(property);
 	}
 	public <X, N extends Enum<N>> Field<X> getWeaklyLinkedField(N property, Class<X> type) {
 		return super.getWeaklyLinkedField(property, type);
