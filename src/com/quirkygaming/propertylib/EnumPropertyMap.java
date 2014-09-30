@@ -22,13 +22,14 @@ public class EnumPropertyMap<E extends Enum<E>, T> {
 		mainEnumClass = enumClass;
 	}
 	
-	public EnumPropertyMap(Class<E> mainEnumClass, Class<E>... otherEnums) {
+	public EnumPropertyMap(Class<E> mainEnumClass, Class<?>... otherEnums) {
 		int currentPos = getEnumValues(mainEnumClass).length;
 		
 		multiEnums = true;
 		positions = new HashMap<Class<?>, Integer>();
 
 		for (Class<?> ec : otherEnums) {
+			if (!ec.isEnum()) throw new RuntimeException(ec.getName() + " is not an enum");
 			positions.put(ec, currentPos);
 			currentPos += getEnumValues(ec).length;
 		}
@@ -67,7 +68,7 @@ public class EnumPropertyMap<E extends Enum<E>, T> {
 		
 	}
 	private RuntimeException getEx(Exception e, String name) {
-		return new RuntimeException("Runtime error while processing enum " + name + " .", e);
+		return new RuntimeException("Runtime error while processing enum " + name, e);
 	}
 
 	public int size() {
