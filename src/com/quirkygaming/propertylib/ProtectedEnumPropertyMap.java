@@ -108,6 +108,9 @@ public class ProtectedEnumPropertyMap<E extends Enum<E>, T> {
 	protected T set(Enum<?> enumKey, T value) {
 		return set(getIndex(enumKey), value);
 	}
+	protected <X> X setAsType(Enum<?> enumKey, X value) {
+		return set(getIndex(enumKey), value);
+	}
 	<X> X set(int index, X value) {
 		if (index == -1) return null;
 		try {
