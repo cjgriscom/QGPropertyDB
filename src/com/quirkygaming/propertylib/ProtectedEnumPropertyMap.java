@@ -42,6 +42,9 @@ public class ProtectedEnumPropertyMap<E extends Enum<E>, T> {
 	protected <N extends Enum<N>> Field<T> getField(N property) {
 		return new MappedFieldImpl<T>(this, property);
 	}
+	protected <X, N extends Enum<N>> Field<X> getWeaklyLinkedField(N property) {
+		return new WeakMappedFieldImpl<X>(this, property);
+	}
 	protected <X, N extends Enum<N>> Field<X> getWeaklyLinkedField(N property, Class<X> type) {
 		return new WeakMappedFieldImpl<X>(this, property);
 	}
