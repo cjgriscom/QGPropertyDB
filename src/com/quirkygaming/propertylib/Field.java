@@ -1,8 +1,6 @@
 package com.quirkygaming.propertylib;
 
 public abstract class Field<T> {
-	protected Field(T initialValue) {}
-	
 	public static <T> Field<T> newField(T initialValue) {
 		return new FieldImpl<T>(initialValue);
 	}
@@ -31,7 +29,6 @@ public abstract class Field<T> {
 
 class FieldImpl<T> extends Field<T> {
 	protected FieldImpl(T initialValue) {
-		super(initialValue);
 		field = initialValue;
 	}
 
@@ -52,7 +49,6 @@ class MappedFieldImpl<T> extends Field<T> {
 	private ProtectedEnumPropertyMap<?, T> map;
 	
 	protected <E extends Enum<E>> MappedFieldImpl(ProtectedEnumPropertyMap<?, T> map, E property) {
-		super(null);
 		this.map = map;
 		this.index = map.getIndex(property);
 	}
@@ -75,7 +71,6 @@ class WeakMappedFieldImpl<T> extends Field<T> {
 	private ProtectedEnumPropertyMap<?, ?> map;
 	
 	protected <E extends Enum<E>, X extends Object> WeakMappedFieldImpl(ProtectedEnumPropertyMap<?, X> map, E property) {
-		super(null);
 		this.map = map;
 		this.index = map.getIndex(property);
 	}

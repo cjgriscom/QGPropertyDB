@@ -16,7 +16,6 @@ public class MutableField<T> extends Field<T> {
 	}
 	
 	private MutableField(Field<T> field) {
-		super(null);
 		this.field = field;
 	}
 	
