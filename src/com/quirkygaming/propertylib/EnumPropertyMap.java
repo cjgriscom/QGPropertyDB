@@ -31,9 +31,15 @@ public class EnumPropertyMap<E extends Enum<E>, T> extends ProtectedEnumProperty
 	public T get(Enum<?> enumKey) {
 		return super.get(enumKey);
 	}
+	public <X> X getAsType(Enum<?> enumKey) {
+		return super.getAsType(enumKey);
+	}
 	
 	public T set(Enum<?> enumKey, T value) {
 		return super.set(enumKey, value);
+	}
+	public <X> X setAsType(Enum<?> enumKey, X value) {
+		return super.setAsType(enumKey, value);
 	}
 	
 	public void clear() {
