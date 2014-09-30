@@ -75,17 +75,17 @@ public class EnumPropertyMap<E extends Enum<E>, T> {
 		return size;
 	}
 	
-	int getIndex(E enumKey) {
+	int getIndex(Enum<?> enumKey) {
+		if (mainEnumClass == enumKey.getClass()) return enumKey.ordinal();
 		if (multiEnums) {
 			Integer position = positions.get(enumKey.getClass());
 			if (position == null) return -1;
 			return positions.get(enumKey.getClass()) + enumKey.ordinal();
 		}
-		if (mainEnumClass != enumKey.getClass()) return -1;
-		return enumKey.ordinal();
+		return -1;
 	}
 
-	protected T get(E enumKey) {
+	protected T get(Enum<?> enumKey) {
 		return get(getIndex(enumKey));
 	}
 	@SuppressWarnings("unchecked")
@@ -94,7 +94,7 @@ public class EnumPropertyMap<E extends Enum<E>, T> {
 		return (T) items[index];
 	}
 	
-	protected T set(E enumKey, T value) {
+	protected T set(Enum<?> enumKey, T value) {
 		return set(getIndex(enumKey), value);
 	}
 	T set(int index, T value) {
