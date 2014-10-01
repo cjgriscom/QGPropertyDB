@@ -5,6 +5,12 @@ public abstract class Field<T> {
 		return new FieldImpl<T>(initialValue);
 	}
 	
+	public static <T> Field<T> newField(Mutator m, T initialValue) {
+		Field<T> f = new FieldImpl<T>(initialValue);
+		m.internalAddPermission(f);
+		return f;
+	}
+	
 	abstract void set(T v);
 	
 	public abstract T get();
