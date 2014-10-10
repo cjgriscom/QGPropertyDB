@@ -68,4 +68,9 @@ public class MutableField<T> extends Field<T> {
 	T getInternal() {
 		return field.getInternal();
 	}
+	
+	@Override
+	public String toString() {
+		return field.toString();
+	}
 }

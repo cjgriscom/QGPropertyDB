@@ -125,6 +125,11 @@ class FieldImpl<T> extends Field<T> {
 	public T get() {
 		return getInternal();
 	}
+	
+	@Override
+	public String toString() {
+		return field.toString();
+	}
 }
 
 class CloningField<T extends Cloneable> extends FieldImpl<T> {
