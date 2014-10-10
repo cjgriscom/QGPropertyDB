@@ -1,5 +1,8 @@
 package com.quirkygaming.propertylib;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 /**
  * A generic wrapper object that allows construction with an initial value, 
  * and allows subsequent value retrievals with the get() method.  A mutator
@@ -41,7 +44,7 @@ public abstract class Field<T> {
 	/**
 	 * Constructs a new Field with type T as specified by initialValue.
 	 * 
-	 * @param m An existing Mutator object, to which permission will be given to set this field.
+	 * @param mutator An existing Mutator object, to which permission will be given to set this field.
 	 * @param initialValue Provides the initial value of the Field as well as its type.
 	 * @return The newly constructed Field
 	 */
@@ -51,7 +54,36 @@ public abstract class Field<T> {
 		return f;
 	}
 	
-	abstract void set(T v);
+	/**
+	 * An extension of Field that returns a clone of the field contents upon calling of the get() method.
+	 * Java's Cloneable interface must be properly implemented for this to work at all.
+	 * Constructs a new clone-on-get with type T as specified by initialValue.
+	 * 
+	 * @param initialValue Provides the initial value of the CloningField as well as its type.
+	 * @return The newly constructed CloningField
+	 */
+	public static <T extends Cloneable> CloningField<T> newCloningField(T initialValue) {
+		return new CloningField<T>(initialValue);
+	}
+	
+	/**
+	 * An extension of Field that returns a clone of the field contents upon calling of the get() method.
+	 * Java's Cloneable interface must be properly implemented for this to work at all.
+	 * Constructs a new clone-on-get Field with type T as specified by initialValue.
+	 * 
+	 * @param mutator An existing Mutator object, to which permission will be given to set this field
+	 * or get the internal (non-clone) value.
+	 * @param initialValue Provides the initial value of the CloningField as well as its type.
+	 * @return The newly constructed CloningField
+	 */
+	public static <T extends Cloneable> CloningField<T> newCloningField(Mutator mutator, T initialValue) {
+		CloningField<T> f = new CloningField<T>(initialValue);
+		f.mutator = mutator;
+		return f;
+	}
+	
+	abstract void setInternal(T v);
+	abstract T getInternal();
 	
 	/**
 	 * Gets the current value.
@@ -81,13 +113,80 @@ class FieldImpl<T> extends Field<T> {
 		field = initialValue;
 	}
 
-	private T field;
+	T field;
 	
-	void set(T v) {
+	void setInternal(T v) {
 		field = v;
+	}
+	T getInternal() {
+		return field;
 	}
 	
 	public T get() {
-		return field;
+		return getInternal();
 	}
+}
+
+class CloningField<T extends Cloneable> extends FieldImpl<T> {
+	
+	/**
+	 * Constructs a new CloningField with type T as specified by initialValue.
+	 * 
+	 * @param initialValue Provides the initial value of the CloningField as well as its type.
+	 * @return The newly constructed CloningField
+	 */
+	public static <T extends Cloneable> CloningField<T> newCloningField(T initialValue) {
+		return new CloningField<T>(initialValue);
+	}
+	
+	private Method cloneMethod;
+	
+	CloningField(T initialValue) {
+		super(initialValue);
+		try {
+			cloneMethod = initialValue.getClass().getMethod("clone");
+			if (!cloneMethod.isAccessible()) cloneMethod.setAccessible(true);
+		} catch (SecurityException e) {
+			checkException(e, true);
+		} catch (NoSuchMethodException e) {
+			checkException(e, true);
+		}
+	}
+	
+	/**
+	 * Gets a clone of the current value.
+	 * 
+	 * @return The cloned value
+	 */
+	@SuppressWarnings("unchecked")
+	@Override
+	public T get() {
+		try {
+			return (T) cloneMethod.invoke(field);
+		} catch (IllegalArgumentException e) {
+			checkException(e, false);
+		} catch (IllegalAccessException e) {
+			checkException(e, true);
+		} catch (InvocationTargetException e) {
+			boolean implError = false;
+			Throwable e2 = e.getCause(); // clone() returned an error, get cause.
+			if (e2 instanceof CloneNotSupportedException) implError = true;
+			checkException(e, implError);
+		} catch (ClassCastException e) {
+			checkException(e, false);
+		} catch (NullPointerException e) {
+			checkException(e, false);
+		}
+		
+		return null;
+	}
+	
+	private void checkException(Throwable e, boolean implError) {
+		if (implError) {
+			throw new RuntimeException("Error in implementation of Cloneable", e);
+		} else {
+			throw new RuntimeException("Unexpected exception encountered during cloning process", e);
+		}
+	}
+
 }

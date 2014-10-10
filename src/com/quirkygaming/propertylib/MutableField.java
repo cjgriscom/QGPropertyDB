@@ -19,6 +19,16 @@ public class MutableField<T> extends Field<T> {
 		return new MutableField<T>(new FieldImpl<T>(initialValue));
 	}
 	
+	/**
+	 * Constructs a new clone-on-get MutableField with type T as specified by initialValue.
+	 * 
+	 * @param initialValue Provides the initial value of the MutableField as well as its type.
+	 * @return The newly constructed MutableField
+	 */
+	public static <T extends Cloneable> MutableField<T> newClonableField(T initialValue) {
+		return new MutableField<T>(new CloningField<T>(initialValue));
+	}
+	
 	MutableField(Field<T> field) {
 		this.field = field;
 	}
@@ -26,9 +36,8 @@ public class MutableField<T> extends Field<T> {
 	/**
 	 * Sets the value of this MutableField
 	 */
-	@Override
 	public void set(T v) {
-		field.set(v);
+		field.setInternal(v);
 	}
 	
 	/**
@@ -48,5 +57,15 @@ public class MutableField<T> extends Field<T> {
 	 */
 	public Field<T> getImmutable() {
 		return field;
+	}
+
+	@Override
+	void setInternal(T v) {
+		field.setInternal(v);
+	}
+
+	@Override
+	T getInternal() {
+		return field.getInternal();
 	}
 }
