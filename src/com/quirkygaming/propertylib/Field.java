@@ -167,7 +167,9 @@ class CloningField<T extends Cloneable> extends FieldImpl<T> {
 	@Override
 	public T get() {
 		try {
-			return (T) cloneMethod.invoke(field);
+			T result = (T) cloneMethod.invoke(field);
+			if (result == null) throw new NullPointerException("clone() method returned null");
+			return result;
 		} catch (IllegalArgumentException e) {
 			checkException(e, false);
 		} catch (IllegalAccessException e) {
