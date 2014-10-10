@@ -1,8 +1,5 @@
 package com.quirkygaming.propertylib;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * A class used for the purpose of internally mutating Field objects.
  *
@@ -11,17 +8,13 @@ import java.util.Set;
  */
 public class Mutator {
 	
-	private Set<Field<?>> fieldSet = new HashSet<Field<?>>();
+	//private Set<Field<?>> fieldSet = new HashSet<Field<?>>();
 	
 	/**
 	 * No-arg constructor
 	 */
 	public Mutator() {
 		
-	}
-	
-	void internalAddPermission(Field<?> field) {
-		fieldSet.add(field);
 	}
 	
 	/**
@@ -33,7 +26,7 @@ public class Mutator {
 	 * @return A copy of the new value
 	 */
 	public <T> T set(Field<T> field, T value) {
-		if (field instanceof MutableField || fieldSet.contains(field)) {
+		if (field instanceof MutableField || field.mutator == this) {
 			field.set(value);
 			return value;
 		} else {

@@ -25,6 +25,9 @@ package com.quirkygaming.propertylib;
  * @version 1.0
  */
 public abstract class Field<T> {
+	
+	Mutator mutator = null;
+	
 	/**
 	 * Constructs a new Field with type T as specified by initialValue.
 	 * 
@@ -42,9 +45,9 @@ public abstract class Field<T> {
 	 * @param initialValue Provides the initial value of the Field as well as its type.
 	 * @return The newly constructed Field
 	 */
-	public static <T> Field<T> newField(Mutator m, T initialValue) {
+	public static <T> Field<T> newField(Mutator mutator, T initialValue) {
 		Field<T> f = new FieldImpl<T>(initialValue);
-		m.internalAddPermission(f);
+		f.mutator = mutator;
 		return f;
 	}
 	
