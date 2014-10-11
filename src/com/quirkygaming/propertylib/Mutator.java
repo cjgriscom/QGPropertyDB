@@ -1,14 +1,12 @@
 package com.quirkygaming.propertylib;
 
 /**
- * A class used for the purpose of internally mutating Field objects.
+ * A class used for the purpose of internally mutating Property objects.
  *
  * @author  CJ Griscom
  * @version 1.0
  */
 public class Mutator {
-	
-	//private Set<Field<?>> fieldSet = new HashSet<Field<?>>();
 	
 	/**
 	 * No-arg constructor
@@ -18,36 +16,36 @@ public class Mutator {
 	}
 	
 	/**
-	 * Use this method to get the value of a field -- mainly intended for the purpose of
-	 * getting the internal value of a cloning Field.  The field MUST have been constructed 
+	 * Use this method to get the value of a Property -- mainly intended for the purpose of
+	 * getting the internal value of a clone-on-get Property.  The Property MUST have been constructed 
 	 * with a reference to this mutator, otherwise the mutator will throw a runtime exception.
 	 * 
-	 * @param field The field to be accessed
-	 * @return The field's internal value
+	 * @param property The Property to be accessed
+	 * @return The Property's internal value
 	 */
-	public <T> T get(Field<T> field) {
-		if (field instanceof MutableField || field.mutator == this) {
+	public <T> T get(Property<T> property) {
+		if (property instanceof MutableProperty || property.mutator == this) {
 			
-			return field.getInternal();
+			return property.getInternal();
 		} else {
-			throw new RuntimeException("Caller attempted to illegally get internal field with mutator");
+			throw new RuntimeException("Caller attempted to illegally get internal property with mutator");
 		}
 	}
 	
 	/**
-	 * Use this method to set the value of an immutable field.  The field MUST have been constructed 
+	 * Use this method to set the value of an immutable Property.  The Property MUST have been constructed 
 	 * with a reference to this mutator, otherwise the mutator will throw a runtime exception.
 	 * 
-	 * @param field The field to be modified
+	 * @param property The Property to be modified
 	 * @param value The new value
 	 * @return The new value
 	 */
-	public <T> T set(Field<T> field, T value) {
-		if (field instanceof MutableField || field.mutator == this) {
-			field.setInternal(value);
+	public <T> T set(Property<T> property, T value) {
+		if (property instanceof MutableProperty || property.mutator == this) {
+			property.setInternal(value);
 			return value;
 		} else {
-			throw new RuntimeException("Caller attempted to illegally set field with mutator");
+			throw new RuntimeException("Caller attempted to illegally set property with mutator");
 		}
 	}
 	
