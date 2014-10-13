@@ -24,7 +24,7 @@ import java.lang.reflect.Method;
  * mutator.set(integerProperty, 256); // Sets integerProperty to 256
  * }
  *
- * @author  CJ Griscom
+ * @author  Chandler Griscom
  * @version 1.0
  */
 public abstract class Property<T> {

@@ -3,7 +3,7 @@ package com.quirkygaming.propertylib;
 /**
  * A class used for the purpose of internally mutating Property objects.
  *
- * @author  CJ Griscom
+ * @author  Chandler Griscom
  * @version 1.0
  */
 public class Mutator {

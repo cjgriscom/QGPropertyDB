@@ -3,7 +3,7 @@ package com.quirkygaming.propertylib;
 /**
  * An extension of Property<T> with the addition of a set method.
  *
- * @author  CJ Griscom
+ * @author  Chandler Griscom
  * @version 1.0
  */
 public class MutableProperty<T> extends Property<T> {
