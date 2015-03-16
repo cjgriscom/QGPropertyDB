@@ -6,9 +6,7 @@ package com.quirkygaming.propertylib;
  * @author  Chandler Griscom
  * @version 1.0
  */
-public class MutableProperty<T> extends Property<T> {
-	private final Property<T> property;
-	
+public class MutableProperty<T> extends BoundProperty<T> {
 	/**
 	 * Constructs a new MutableProperty with type T as specified by initialValue.
 	 * 
@@ -30,24 +28,14 @@ public class MutableProperty<T> extends Property<T> {
 	}
 	
 	MutableProperty(Property<T> property) {
-		this.property = property;
+		super(property);
 	}
 	
 	/**
 	 * Sets the value of this MutableProperty
 	 */
 	public void set(T v) {
-		property.setInternal(v);
-	}
-	
-	/**
-	 * Gets the current value.
-	 * 
-	 * @return The value
-	 */
-	@Override
-	public T get() {
-		return property.get();
+		super.setInternal(v);
 	}
 	
 	/**
@@ -56,21 +44,6 @@ public class MutableProperty<T> extends Property<T> {
 	 * @return The immutable version
 	 */
 	public Property<T> getImmutable() {
-		return property;
-	}
-
-	@Override
-	void setInternal(T v) {
-		property.setInternal(v);
-	}
-
-	@Override
-	T getInternal() {
-		return property.getInternal();
-	}
-	
-	@Override
-	public String toString() {
-		return property.toString();
+		return super.getInternalProperty();
 	}
 }

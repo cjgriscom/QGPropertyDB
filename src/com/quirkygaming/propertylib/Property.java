@@ -59,10 +59,10 @@ public abstract class Property<T> {
 	 * Java's Cloneable interface must be properly implemented for this to work at all.
 	 * Constructs a new clone-on-get with type T as specified by initialValue.
 	 * 
-	 * @param initialValue Provides the initial value of the CloningProperty as well as its type.
-	 * @return The newly constructed CloningProperty
+	 * @param initialValue Provides the initial value of the Property as well as its type.
+	 * @return The newly constructed Property
 	 */
-	public static <T extends Cloneable> CloningProperty<T> newCloningProperty(T initialValue) {
+	public static <T extends Cloneable> Property<T> newCloningProperty(T initialValue) {
 		return new CloningProperty<T>(initialValue);
 	}
 	
@@ -73,14 +73,29 @@ public abstract class Property<T> {
 	 * 
 	 * @param mutator An existing Mutator object, to which permission will be given to set this property
 	 * or get the internal (non-clone) value.
-	 * @param initialValue Provides the initial value of the CloningProperty as well as its type.
-	 * @return The newly constructed CloningProperty
+	 * @param initialValue Provides the initial value of the Property as well as its type.
+	 * @return The newly constructed Property
 	 */
-	public static <T extends Cloneable> CloningProperty<T> newCloningProperty(Mutator mutator, T initialValue) {
-		CloningProperty<T> f = new CloningProperty<T>(initialValue);
+	public static <T extends Cloneable> Property<T> newCloningProperty(Mutator mutator, T initialValue) {
+		Property<T> f = newCloningProperty(initialValue);
 		f.mutator = mutator;
 		return f;
 	}
+	
+	/**
+	 * An extension of Property that returns a Property whose value is bound to another one.
+	 * 
+	 * @param mutator An existing Mutator object, to which permission will be given to set this property
+	 * or get the internal (non-clone) value.
+	 * @param initialValue Provides the initial value of the Property as well as its type.
+	 * @return The newly constructed Property
+	 */
+	public static <T extends Cloneable> Property<T> newBoundProperty(Mutator mutator, Property<T> otherProperty) {
+		BoundProperty<T> f = new BoundProperty<T>(otherProperty);
+		f.mutator = mutator;
+		return f;
+	}
+	
 	
 	abstract void setInternal(T v);
 	abstract T getInternal();
@@ -195,5 +210,37 @@ class CloningProperty<T extends Cloneable> extends PropertyImpl<T> {
 			throw new RuntimeException("Unexpected exception encountered during cloning process", e);
 		}
 	}
-
 }
+
+class BoundProperty<T> extends Property<T> {
+	private final Property<T> property;
+	
+	BoundProperty(Property<T> property) {
+		this.property = property;
+	}
+	
+	@Override
+	public T get() {
+		return property.get();
+	}
+	
+	Property<T> getInternalProperty() {
+		return property;
+	}
+
+	@Override
+	void setInternal(T v) {
+		property.setInternal(v);
+	}
+
+	@Override
+	T getInternal() {
+		return property.getInternal();
+	}
+	
+	@Override
+	public String toString() {
+		return property.toString();
+	}
+}
+
