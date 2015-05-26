@@ -1,5 +1,6 @@
 package com.quirkygaming.propertylib;
 
+import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -27,7 +28,9 @@ import java.lang.reflect.Method;
  * @author  Chandler Griscom
  * @version 1.0
  */
-public abstract class Property<T> {
+public abstract class Property<T> implements Serializable {
+	
+	private static final long serialVersionUID = 6052049039286436490L;
 	
 	Mutator mutator = null;
 	
@@ -123,7 +126,10 @@ public abstract class Property<T> {
 	}	
 }
 
-class PropertyImpl<T> extends Property<T> {
+class PropertyImpl<T> extends Property<T> implements Serializable {
+	
+	private static final long serialVersionUID = 4567929961845330373L;
+
 	PropertyImpl(T initialValue) {
 		property = initialValue;
 	}
@@ -147,8 +153,10 @@ class PropertyImpl<T> extends Property<T> {
 	}
 }
 
-class CloningProperty<T extends Cloneable> extends PropertyImpl<T> {
+class CloningProperty<T extends Cloneable> extends PropertyImpl<T> implements Serializable {
 	
+	private static final long serialVersionUID = -2402718642797054031L;
+
 	/**
 	 * Constructs a new CloningProperty with type T as specified by initialValue.
 	 * 
@@ -212,7 +220,10 @@ class CloningProperty<T extends Cloneable> extends PropertyImpl<T> {
 	}
 }
 
-class BoundProperty<T> extends Property<T> {
+class BoundProperty<T> extends Property<T> implements Serializable {
+	
+	private static final long serialVersionUID = 4933398593737862232L;
+	
 	private final Property<T> property;
 	
 	BoundProperty(Property<T> property) {

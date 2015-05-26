@@ -1,12 +1,17 @@
 package com.quirkygaming.propertylib;
 
+import java.io.Serializable;
+
 /**
  * An extension of Property<T> with the addition of a set method.
  *
  * @author  Chandler Griscom
  * @version 1.0
  */
-public class MutableProperty<T> extends BoundProperty<T> {
+public class MutableProperty<T> extends BoundProperty<T> implements Serializable {
+	
+	private static final long serialVersionUID = -6764130456697090580L;
+
 	/**
 	 * Constructs a new MutableProperty with type T as specified by initialValue.
 	 * 
