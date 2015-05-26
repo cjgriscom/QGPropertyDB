@@ -1,13 +1,17 @@
 package com.quirkygaming.propertylib;
 
+import java.io.Serializable;
+
 /**
  * A class used for the purpose of internally mutating Property objects.
  *
  * @author  Chandler Griscom
  * @version 1.0
  */
-public class Mutator {
+public class Mutator implements Serializable {
 	
+	private static final long serialVersionUID = -1198705860038388546L;
+
 	/**
 	 * No-arg constructor
 	 */
