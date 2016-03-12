@@ -2,6 +2,8 @@ package com.quirkygaming.propertylib;
 
 import java.io.Serializable;
 
+import com.quirkygaming.propertylib.PropertyObserver.EventType;
+
 /**
  * A class used for the purpose of internally mutating Property objects.
  *
@@ -29,7 +31,7 @@ public class Mutator implements Serializable {
 	 */
 	public <T> T get(Property<T> property) {
 		if (property instanceof MutableProperty || property.mutator == this) {
-			
+			property.signal(EventType.GET);
 			return property.getInternal();
 		} else {
 			throw new RuntimeException("Caller attempted to illegally get internal property with mutator");
@@ -47,9 +49,24 @@ public class Mutator implements Serializable {
 	public <T> T set(Property<T> property, T value) {
 		if (property instanceof MutableProperty || property.mutator == this) {
 			property.setInternal(value);
+			property.signal(EventType.SET);
 			return value;
 		} else {
 			throw new RuntimeException("Caller attempted to illegally set property with mutator");
+		}
+	}
+	
+	/**
+	 * Use this method to signal a (potential) change to the contents of the property.
+	 * All PropertyObservers that registered the UPDATE event will be notified of the update.
+	 * 
+	 * @param property The Property to be signaled
+	 */
+	public <T> void update(Property<T> property) {
+		if (property instanceof MutableProperty || property.mutator == this) {
+			property.signal(EventType.UPDATE);
+		} else {
+			throw new RuntimeException("Caller attempted to illegally update property with mutator");
 		}
 	}
 	

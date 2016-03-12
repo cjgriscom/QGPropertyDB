@@ -3,6 +3,9 @@ package com.quirkygaming.propertylib;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Vector;
+
+import com.quirkygaming.propertylib.PropertyObserver.EventType;
 
 /**
  * A generic wrapper object that allows construction with an initial value, 
@@ -33,6 +36,7 @@ public abstract class Property<T> implements Serializable {
 	private static final long serialVersionUID = 6052049039286436490L;
 	
 	Mutator mutator = null;
+	private transient Observer<T> obs = new Observer<T>();
 	
 	/**
 	 * Constructs a new Property with type T as specified by initialValue.
@@ -99,9 +103,12 @@ public abstract class Property<T> implements Serializable {
 		return f;
 	}
 	
-	
 	abstract void setInternal(T v);
 	abstract T getInternal();
+	
+	void signal(EventType type) {
+		obs.handleEvents(this, type);
+	}
 	
 	/**
 	 * Gets the current value.
@@ -123,7 +130,14 @@ public abstract class Property<T> implements Serializable {
 	 */
 	public boolean equals(Property<?> other) {
 		return get().equals(other.get());
-	}	
+	}
+	
+	/**
+	 * Adds an observer to listen for changes to this Property
+	 */
+	public void addObserver(PropertyObserver<T> observer, EventType... types) {
+		obs.addHandler(observer, types);
+	}
 }
 
 class PropertyImpl<T> extends Property<T> implements Serializable {
@@ -144,6 +158,7 @@ class PropertyImpl<T> extends Property<T> implements Serializable {
 	}
 	
 	public T get() {
+		signal(EventType.GET);
 		return getInternal();
 	}
 	
@@ -192,6 +207,7 @@ class CloningProperty<T extends Cloneable> extends PropertyImpl<T> implements Se
 		try {
 			T result = (T) cloneMethod.invoke(property);
 			if (result == null) throw new NullPointerException("clone() method returned null");
+			signal(EventType.GET);
 			return result;
 		} catch (IllegalArgumentException e) {
 			checkException(e, false);
@@ -232,6 +248,7 @@ class BoundProperty<T> extends Property<T> implements Serializable {
 	
 	@Override
 	public T get() {
+		property.signal(EventType.GET);
 		return property.get();
 	}
 	
@@ -255,3 +272,27 @@ class BoundProperty<T> extends Property<T> implements Serializable {
 	}
 }
 
+
+class Observer<T> {
+	private Vector<PropertyObserver<T>> observers_GET = new Vector<PropertyObserver<T>>();
+	private Vector<PropertyObserver<T>> observers_SET = new Vector<PropertyObserver<T>>();
+	private Vector<PropertyObserver<T>> observers_UPDATE = new Vector<PropertyObserver<T>>();
+	
+	protected void handleEvents(Property<T> property, EventType type) {
+		switch (type) {
+			case GET: for (PropertyObserver<T> o : observers_GET) {o.onChange(property, type);} break;
+			case SET: for (PropertyObserver<T> o : observers_SET) {o.onChange(property, type);} break;
+			case UPDATE: for (PropertyObserver<T> o : observers_UPDATE) {o.onChange(property, type);} break;
+		}
+	}
+	
+	protected void addHandler(PropertyObserver<T> o, EventType... types) {
+		for (EventType type : types) {
+			switch (type) {
+				case GET: observers_GET.add(o); break;
+				case SET: observers_SET.add(o); break;
+				case UPDATE: observers_UPDATE.add(o); break;
+			}
+		}
+	}
+}

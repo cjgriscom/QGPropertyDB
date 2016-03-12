@@ -2,6 +2,8 @@ package com.quirkygaming.propertylib;
 
 import java.io.Serializable;
 
+import com.quirkygaming.propertylib.PropertyObserver.EventType;
+
 /**
  * An extension of Property<T> with the addition of a set method.
  *
@@ -40,6 +42,7 @@ public class MutableProperty<T> extends BoundProperty<T> implements Serializable
 	 * Sets the value of this MutableProperty
 	 */
 	public void set(T v) {
+		signal(EventType.SET);
 		super.setInternal(v);
 	}
 	
