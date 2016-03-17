@@ -36,7 +36,7 @@ public abstract class Property<T> implements Serializable {
 	private static final long serialVersionUID = 6052049039286436490L;
 	
 	Mutator mutator = null;
-	private transient Observer<T> obs = new Observer<T>();
+	private transient Observer<T> observers;
 	
 	/**
 	 * Constructs a new Property with type T as specified by initialValue.
@@ -107,7 +107,7 @@ public abstract class Property<T> implements Serializable {
 	abstract T getInternal();
 	
 	void signal(EventType type) {
-		obs.handleEvents(this, type);
+		if (observers != null) observers.handleEvents(this, type);
 	}
 	
 	/**
@@ -136,7 +136,8 @@ public abstract class Property<T> implements Serializable {
 	 * Adds an observer to listen for changes to this Property
 	 */
 	public void addObserver(PropertyObserver<T> observer, EventType... types) {
-		obs.addHandler(observer, types);
+		if (observers == null) observers = new Observer<T>();
+		observers.addHandler(observer, types);
 	}
 }
 
