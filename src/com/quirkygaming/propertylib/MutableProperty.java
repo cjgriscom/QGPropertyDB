@@ -54,4 +54,15 @@ public class MutableProperty<T> extends BoundProperty<T> implements Serializable
 	public Property<T> getImmutable() {
 		return super.getInternalProperty();
 	}
+	
+	/**
+	 * Construct (if necessary) and return a mutator for this Property
+	 * @return The Mutator
+	 */
+	public Mutator getMutator() {
+		if (mutator == null) {
+			mutator = new Mutator();
+		}
+		return mutator;
+	}
 }
