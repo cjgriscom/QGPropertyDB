@@ -19,24 +19,58 @@ import com.quirkygaming.propertylib.Property;
 import com.quirkygaming.propertylib.PropertyObserver;
 import com.quirkygaming.propertylib.PropertyObserver.EventType;
 
+/**
+ * Main API class; meant for static access
+ * @author chandler
+ *
+ */
 public final class PropertyDB {
 	
+	// Stores current instance;
 	private static PropertyDB INSTANCE;
 	
+	// Stores the current token used to control this instance
 	private InitializationToken token = null;
 	
+	// "Clock" provider and close-handler
 	private CustomScheduler scheduler;
 	
+	// Stores running list of entries as initialized by users
 	private HashMap<MutableProperty<?>, DBEntry<?,?>> entries = new HashMap<MutableProperty<?>, DBEntry<?,?>>();
+	
+	// Keeps track of elements waiting to be serialized on next clock pulse
 	private Set<DBEntry<?,?>> waiting = Collections.synchronizedSet(new LinkedHashSet<DBEntry<?,?>>());
+	
+	// Ensures that two saves never run concurrently
 	private Object saveLock = new Object();
 	
 	private PropertyDB(){}
 	
+	/**
+	 * This method should be called by some authoritative controller of a program to
+	 * initialize the database before users start registering their properties.
+	 * It returns an InitializationToken which can be used to close the database
+	 * safely when your application is closing.
+	 * 
+	 * @param period_millis The time between every asynchronous write
+	 * @return The token used to control the database, usually the main loop of a program or a Bukkit plugin
+	 * @throws IllegalInitializationException if the DB is already initialized
+	 */
 	public static InitializationToken initializeDB(int period_millis) throws IllegalInitializationException {
 		return initializeDB(period_millis, new DefaultScheduler());
 	}
 	
+	/**
+	 * This method should be called by some authoritative controller of a program to
+	 * initialize the database before users start registering their properties.
+	 * It returns an InitializationToken which can be used to close the database
+	 * safely when your application is closing.
+	 * 
+	 * @param period_millis The time between every asynchronous write
+	 * @param scheduler Use to implement a custom scheduler, for example, if you want writes to be synchronized with your main loop.
+	 * @return The token used to control the database, usually the main loop of a program or a Bukkit plugin
+	 * @throws IllegalInitializationException if the DB is already initialized
+	 */
 	public static InitializationToken initializeDB(int period_millis, CustomScheduler scheduler) throws IllegalInitializationException {
 		if (INSTANCE == null) {
 			assert debug("Initialized DB with " + period_millis + "ms period");
@@ -60,7 +94,12 @@ public final class PropertyDB {
 		} else throw new IllegalInitializationException("PropertyDB already initialized!");
 	}
 	
-	public static void closeDatabase(InitializationToken token) {
+	/**
+	 * Safely writes and closes the database and ties up threads
+	 * @param token The token passed to the database manager who initialized the database
+	 * @throws IllegalInitializationException if the token is invalid
+	 */
+	public static void closeDatabase(InitializationToken token) throws IllegalInitializationException {
 		if (tokenIsValid(token)) {
 			assert debug("Closing DB");
 			INSTANCE.token = null;
@@ -74,8 +113,12 @@ public final class PropertyDB {
 		}
 	}
 	
-	
-	public static void forceSave(InitializationToken token) {
+	/**
+	 * Forces the database to write to disk
+	 * @param token The token passed to the database manager who initialized the database
+	 * @throws IllegalInitializationException if the token is invalid
+	 */
+	public static void forceSave(InitializationToken token) throws IllegalInitializationException {
 		if (tokenIsValid(token)) {
 			assert debug("Forcing save...");
 			INSTANCE.saveProperties();
@@ -84,9 +127,19 @@ public final class PropertyDB {
 		}
 	}
 	
+	/**
+	 * Check if the database has been initialized
+	 * @return True if initialized
+	 */
 	public static boolean initialized() {
 		return INSTANCE != null;
 	}
+	
+	/**
+	 * Check if your token is valid
+	 * @param token The token passed to the database manager who initialized the database
+	 * @return True if valid
+	 */
 	public static boolean tokenIsValid(InitializationToken token) {
 		return initialized() && token != null && token == INSTANCE.token;
 	}
@@ -145,10 +198,29 @@ public final class PropertyDB {
 		return new File(directory.getAbsolutePath(), fieldName + "_" + version + ".property");
 	}
 	
-	public static boolean propertyExists(String fieldName, long version, File directory) {
+	// TODO add version checking method
+	
+	/**
+	 * Checks if a property exists before loading it
+	 * @param directory Location in which properties are stored (can be different for different properties)
+	 * @param fieldName Name of the property
+	 * @param version Version, used for checking existence of previous versions
+	 * @return
+	 */
+	public static boolean propertyExists(File directory, String fieldName, long version) {
 		return getPropertyLocation(fieldName, version, directory).exists();
 	}
 	
+	/**
+	 * Creates or loads the specified property
+	 * @param directory Location in which properties are stored (can be different for different properties)
+	 * @param fieldName Name of the property
+	 * @param version Version, used for checking existence of previous versions
+	 * @param initialValue Initial value if the property doesn't exist
+	 * @param handler An error handler; use the presets in ErrorLib or make your own to handle DatabaseException
+	 * @return A PropertyLib MutableProperty with the desired type
+	 * @throws E Will throw a DatabaseException if the loading criteria don't match the file
+	 */
 	@SuppressWarnings("unchecked")
 	public static <T extends Serializable, E extends Exception> MutableProperty<T> initiateProperty(File directory, final String fieldName, final long version, T initialValue, final ErrorHandler<E> handler) throws E {
 		if (!initialized()) throw new IllegalInitializationException("Database not initialized!");
@@ -203,6 +275,7 @@ public final class PropertyDB {
 		return property;
 	}
 	
+	// Assertion debugging methods
 	static boolean debug(String msg) {System.out.println(msg); return true;}
 	static boolean debug_sleep(int millis) {
 		try {
@@ -214,12 +287,14 @@ public final class PropertyDB {
 	}
 }
 
+/**
+ * The default scheduler; runs asynchronously at a specified period and joins threads when closing
+ */
 final class DefaultScheduler implements CustomScheduler {
 	
 	Thread t;
 	Object savelock = new Object();
 	boolean saving = false;
-	
 	
 	@Override
 	public void scheduleRepeatingTask(final InitializationToken token, final int period_millis, final Runnable r) {
@@ -248,13 +323,15 @@ final class DefaultScheduler implements CustomScheduler {
 	@Override
 	public synchronized void onDatabaseClose() {
 		if (t == null) return;
-		if (!saving) {
-			assert PropertyDB.debug("Calling Interrupt");
-			t.interrupt();
-		} else assert PropertyDB.debug("NOT calling Interrupt");
+		synchronized (savelock) {
+			if (!saving) { // Interrupt sleep
+				assert PropertyDB.debug("Calling Interrupt");
+				t.interrupt();
+			} else assert PropertyDB.debug("NOT calling Interrupt"); // Should never happen
+		}
 		
 		try {
-			t.join();
+			t.join(); // Join thread
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
