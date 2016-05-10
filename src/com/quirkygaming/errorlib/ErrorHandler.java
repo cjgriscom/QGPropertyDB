@@ -47,7 +47,7 @@ public class ErrorHandler<T extends Exception> {
 		Collections.addAll(this.handledExceptions, handledExceptions);
 	}
 	
-	public ErrorHandler<T> addHandledExceptions(Class<?>... exceptionTypes) {
+	public ErrorHandler<T> addHandledExceptions(Class<? extends T>... exceptionTypes) {
 		Collections.addAll(handledExceptions, exceptionTypes);
 		return this;
 	}
