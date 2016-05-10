@@ -57,6 +57,14 @@ public class ErrorHandler<T extends Exception> {
 		return this;
 	}
 	
+	public void tryCatch(Runnable r) throws T {
+		try {
+			r.run();
+		} catch (Exception e) {
+			handle(e);
+		}
+	}
+	
 	private void throwAsRuntimeExp(Throwable t) throws RuntimeException {
 		if (t instanceof RuntimeException) {
 			throw (RuntimeException)t;
