@@ -12,8 +12,7 @@ public class ErrorHandler<T extends Exception> {
 	
 	private HashSet<Class<?>> handledExceptions = new HashSet<Class<?>>();
 	private HashSet<Class<?>> unwrappedExceptions = new HashSet<Class<?>>();
-	private PrintStream log;
-	private boolean printStackTrace = false;
+	private CustomHandler ch = null;
 	
 	public static ErrorHandler<Exception> forwardHandled(Logger log, Class<?>... handledExceptions) {
 		return forwardHandled(new PrintStream(new LoggerStream(log, Level.SEVERE)), handledExceptions);
@@ -25,31 +24,28 @@ public class ErrorHandler<T extends Exception> {
 		return logAll(new PrintStream(new LoggerStream(log, Level.SEVERE)), printStackTrace);
 	}
 	public static ErrorHandler<Exception> forwardHandled(PrintStream log, Class<?>... handledExceptions) {
-		return new ErrorHandler<Exception>(log, false, Exception.class, handledExceptions);
+		return new ErrorHandler<Exception>(new LogHandler(log, false), handledExceptions);
 	}
 	public static ErrorHandler<RuntimeException> logAll(PrintStream log) {
 		return logAll(log, false);
 	}
 	public static ErrorHandler<RuntimeException> logAll(PrintStream log, boolean printStackTrace) {
-		return new ErrorHandler<RuntimeException>(log, false, printStackTrace, RuntimeException.class);
+		return new ErrorHandler<RuntimeException>(new LogHandler(log, printStackTrace), RuntimeException.class);
 	}
 	public static ErrorHandler<Exception> forwardHandled(Class<?>... handledExceptions) {
-		return new ErrorHandler<Exception>(null, false, Exception.class, handledExceptions);
+		return new ErrorHandler<Exception>(new ThrowAll(), handledExceptions);
 	}
 	public static ErrorHandler<RuntimeException> throwAll() {
-		return new ErrorHandler<RuntimeException>(null, true, RuntimeException.class);
+		return new ErrorHandler<RuntimeException>(new ThrowAll());
+	}
+	public static ErrorHandler<RuntimeException> customHandler(CustomHandler handler) {
+		return new ErrorHandler<RuntimeException>(handler);
 	}
 	
-	private ErrorHandler(PrintStream log, boolean bypassMode, Class<T> mode, Class<?>... handledExceptions) {
-		this.log = log;
+	private ErrorHandler(CustomHandler ch, Class<?>... handledExceptions) {
+		this.ch = ch;
 		Collections.addAll(this.handledExceptions, handledExceptions);
 	}
-	
-	private ErrorHandler(PrintStream log, boolean bypassMode, boolean printStackTrace, Class<T> mode, Class<?>... handledExceptions) {
-		this(log, bypassMode, mode, handledExceptions);
-		this.printStackTrace = printStackTrace;
-	}
-
 	
 	public ErrorHandler<T> addHandledExceptions(Class<?>... exceptionTypes) {
 		Collections.addAll(handledExceptions, exceptionTypes);
@@ -61,27 +57,30 @@ public class ErrorHandler<T extends Exception> {
 		return this;
 	}
 	
-	@SuppressWarnings("unchecked")
-	public void handle(Exception e) throws T {
-		Throwable t = e;
-		if (unwrappedExceptions.contains(e.getClass())) {
-			t = e.getCause();
+	private void throwAsRuntimeExp(Throwable t) throws RuntimeException {
+		if (t instanceof RuntimeException) {
+			throw (RuntimeException)t;
+		} else {
+			throw new RuntimeException(t);
 		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void handle(Throwable t) throws T {
+		
+		// Unwrap exception causes if requested
+		if (unwrappedExceptions.contains(t.getClass())) {
+			t = t.getCause();
+		}
+		
+		// Forward exceptions that the client will handle (Exception mode)
 		if (handledExceptions.contains(t.getClass())) {
 			throw (T)t;
-		} else {
-			if (log == null) {
-				if (t instanceof RuntimeException) {
-					throw (RuntimeException)t;
-				} else {
-					throw new RuntimeException(t);
-				}
-			} else {
-				StackTraceElement ste = e.getStackTrace()[0];
-				if (printStackTrace) e.printStackTrace(log);
-				log.println("Caught " + e.getClass().getName() + ": " + e.getMessage() + " at line " + ste.getLineNumber() + " in " + ste.getClassName());
-			}
 		}
+		
+		// Pass to CustomHandler
+		boolean handled = ch.handleException(t);
+		if (!handled) throwAsRuntimeExp(t);
 	}
 }
 
@@ -101,5 +100,30 @@ class LoggerStream extends OutputStream {
 		} else {
 			buffer.append((char)b);
 		}
+	}
+}
+
+class ThrowAll implements CustomHandler {
+	@Override
+	public boolean handleException(Throwable t) {
+		return false;
+	}
+}
+
+class LogHandler implements CustomHandler {
+	boolean printStackTrace;
+	PrintStream log;
+	
+	public LogHandler(PrintStream log, boolean printStackTrace) {
+		this.printStackTrace = printStackTrace;
+		this.log = log;
+	}
+	
+	@Override
+	public boolean handleException(Throwable thr) {
+		StackTraceElement ste = thr.getStackTrace()[0];
+		if (printStackTrace) thr.printStackTrace(log);
+		log.println("Caught " + thr.getClass().getName() + ": " + thr.getMessage() + " at line " + ste.getLineNumber() + " in " + ste.getClassName());
+		return true;
 	}
 }
