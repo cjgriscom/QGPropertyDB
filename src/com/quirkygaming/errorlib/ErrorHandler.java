@@ -3,6 +3,7 @@ package com.quirkygaming.errorlib;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.logging.Level;
@@ -13,6 +14,7 @@ public class ErrorHandler<T extends Exception> {
 	private HashSet<Class<?>> handledExceptions = new HashSet<Class<?>>();
 	private HashSet<Class<?>> unwrappedExceptions = new HashSet<Class<?>>();
 	private CustomHandler ch = null;
+	private Class<T> mode;
 	
 	public static ErrorHandler<Exception> forwardHandled(Logger log, Class<?>... handledExceptions) {
 		return forwardHandled(new PrintStream(new LoggerStream(log, Level.SEVERE)), handledExceptions);
@@ -24,35 +26,39 @@ public class ErrorHandler<T extends Exception> {
 		return logAll(new PrintStream(new LoggerStream(log, Level.SEVERE)), printStackTrace);
 	}
 	public static ErrorHandler<Exception> forwardHandled(PrintStream log, Class<?>... handledExceptions) {
-		return new ErrorHandler<Exception>(new LogHandler(log, false), handledExceptions);
+		return new ErrorHandler<Exception>(new LogHandler(log, false), Exception.class, handledExceptions);
 	}
 	public static ErrorHandler<RuntimeException> logAll(PrintStream log) {
 		return logAll(log, false);
 	}
 	public static ErrorHandler<RuntimeException> logAll(PrintStream log, boolean printStackTrace) {
-		return new ErrorHandler<RuntimeException>(new LogHandler(log, printStackTrace), RuntimeException.class);
+		return new ErrorHandler<RuntimeException>(new LogHandler(log, printStackTrace), RuntimeException.class, RuntimeException.class);
 	}
 	public static ErrorHandler<Exception> forwardHandled(Class<?>... handledExceptions) {
-		return new ErrorHandler<Exception>(new ThrowAll(), handledExceptions);
+		return new ErrorHandler<Exception>(new ThrowAll(), Exception.class, handledExceptions);
 	}
 	public static ErrorHandler<RuntimeException> throwAll() {
-		return new ErrorHandler<RuntimeException>(new ThrowAll());
+		return new ErrorHandler<RuntimeException>(new ThrowAll(), RuntimeException.class);
 	}
 	public static ErrorHandler<RuntimeException> customHandler(CustomHandler handler) {
-		return new ErrorHandler<RuntimeException>(handler);
+		return new ErrorHandler<RuntimeException>(handler, RuntimeException.class);
 	}
 	
-	private ErrorHandler(CustomHandler ch, Class<?>... handledExceptions) {
+	private ErrorHandler(CustomHandler ch, Class<T> mode, Class<?>... handledExceptions) {
 		this.ch = ch;
+		this.mode = mode;
+		validateClasses(handledExceptions);
 		Collections.addAll(this.handledExceptions, handledExceptions);
 	}
 	
-	public ErrorHandler<T> addHandledExceptions(Class<? extends T>... exceptionTypes) {
+	public ErrorHandler<T> addHandledExceptions(Class<?>... exceptionTypes) {
+		validateClasses(exceptionTypes);
 		Collections.addAll(handledExceptions, exceptionTypes);
 		return this;
 	}
 	
 	public ErrorHandler<T> addExceptionsToUnwrap(Class<?>... exceptionTypes) {
+		validateClasses(exceptionTypes);
 		Collections.addAll(unwrappedExceptions, exceptionTypes);
 		return this;
 	}
@@ -89,6 +95,31 @@ public class ErrorHandler<T extends Exception> {
 		// Pass to CustomHandler
 		boolean handled = ch.handleException(t);
 		if (!handled) throwAsRuntimeExp(t);
+	}
+	
+	// Make sure provided classes can be thrown
+	private void validateClasses(Class<?>[] exceptionTypes) throws IllegalArgumentException {
+		for (Class<?> c : exceptionTypes) {
+			if (!mode.isAssignableFrom(c)) {
+				throw formatIllegalArgumentException(c);
+			}
+		}
+	}
+	
+	private RuntimeException formatIllegalArgumentException(Class<?> illegal) {
+		RuntimeException exp = new IllegalArgumentException(
+				"ErrorHandler<" + mode.getSimpleName() + "> "
+				+ "cannot handle " + illegal.getName());
+		
+		// Sift stack trace back to the culprit
+		int stackStart = 0;
+		StackTraceElement[] trace = exp.getStackTrace();
+		for (StackTraceElement e : trace) {
+			if (e.getClassName().equals(ErrorHandler.class.getName())) stackStart++;
+			else break;
+		}
+		exp.setStackTrace(Arrays.copyOfRange(trace, stackStart, trace.length));
+		return exp;
 	}
 }
 
