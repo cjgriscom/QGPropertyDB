@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import com.quirkygaming.errorlib.ErrorHandler;
@@ -36,7 +37,7 @@ public final class PropertyDB {
 	private CustomScheduler scheduler;
 	
 	// Stores running list of entries as initialized by users
-	private HashMap<MutableProperty<?>, DBEntry<?,?>> entries = new HashMap<MutableProperty<?>, DBEntry<?,?>>();
+	private Map<MutableProperty<?>, DBEntry<?,?>> entries = Collections.synchronizedMap(new HashMap<MutableProperty<?>, DBEntry<?,?>>());
 	
 	// Keeps track of elements waiting to be serialized on next clock pulse
 	private Set<DBEntry<?,?>> waiting = Collections.synchronizedSet(new LinkedHashSet<DBEntry<?,?>>());
