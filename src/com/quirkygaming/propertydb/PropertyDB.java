@@ -21,7 +21,6 @@ import com.quirkygaming.propertylib.MutableProperty;
 import com.quirkygaming.propertylib.Property;
 import com.quirkygaming.propertylib.PropertyObserver;
 import com.quirkygaming.propertylib.PropertyObserver.EventType;
-import com.sun.xml.internal.bind.v2.TODO;
 
 /**
  * Main API class; meant for static access
