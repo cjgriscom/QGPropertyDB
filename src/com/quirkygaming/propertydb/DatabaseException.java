@@ -1,7 +1,7 @@
 package com.quirkygaming.propertydb;
 
 /**
- * Thrown when errors occur related to loading or saving properties. 
+ * Thrown when errors occur related to (un)loading, deleting, and saving properties. 
  * @author chandler
  *
  */

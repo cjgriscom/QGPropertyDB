@@ -297,6 +297,14 @@ public final class PropertyDB {
 		return property;
 	}
 	
+	/**
+	 * Delete a property (loaded or unloaded) using location and version information
+	 * @param directory Location in which properties are stored
+	 * @param fieldName Name of the property
+	 * @param version Version, used for checking existence of previous versions
+	 * @param handler An error handler; use the presets in ErrorLib or make your own to handle DatabaseException
+	 * @throws E
+	 */
 	public static <E extends Exception> void deleteProperty(File directory, final String fieldName, final long version, final ErrorHandler<E> handler) throws E {
 		if (!initialized()) throw new IllegalInitializationException("Database not initialized!");
 		final File location = getPropertyLocation(fieldName, version, directory);
@@ -321,6 +329,12 @@ public final class PropertyDB {
 		}
 	}
 	
+	/**
+	 * Deletes a loaded property
+	 * @param property The loaded property
+	 * @param handler An error handler; use the presets in ErrorLib or make your own to handle DatabaseException
+	 * @throws E
+	 */
 	public static <E extends Exception> void deleteProperty(MutableProperty<?> property, final ErrorHandler<E> handler) throws E {
 		if (!initialized()) throw new IllegalInitializationException("Database not initialized!");
 		DBEntry<?, ?> entry = INSTANCE.entries.get(property);
@@ -335,7 +349,14 @@ public final class PropertyDB {
 			handler.handle(new DatabaseException("IOException while deleting property: " + entry.fieldName + " version " + entry.version, e));
 		}
 	}
-
+	
+	/**
+	 * Unloads a loaded property. The associated MutableProperty will continue to store its data but will
+	 * be completely detached from the database. To restore it, it must be initialized again.
+	 * @param property The loaded property
+	 * @param handler An error handler; use the presets in ErrorLib or make your own to handle DatabaseException
+	 * @throws E
+	 */
 	public static <E extends Exception> File unloadProperty(MutableProperty<?> property, final ErrorHandler<E> handler) throws E {
 		if (!initialized()) throw new IllegalInitializationException("Database not initialized!");
 		
