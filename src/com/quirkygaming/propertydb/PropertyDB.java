@@ -8,11 +8,13 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import com.quirkygaming.errorlib.ErrorHandler;
 import com.quirkygaming.propertylib.MutableProperty;
@@ -38,6 +40,9 @@ public final class PropertyDB {
 	
 	// Stores running list of entries as initialized by users
 	private Map<MutableProperty<?>, DBEntry<?,?>> entries = Collections.synchronizedMap(new HashMap<MutableProperty<?>, DBEntry<?,?>>());
+	
+	// Stores file locations to easily check for duplicates
+	private Map<String, DBEntry<?,?>> locations = Collections.synchronizedMap(new TreeMap<String, DBEntry<?,?>>());
 	
 	// Keeps track of elements waiting to be serialized on next clock pulse
 	private Set<DBEntry<?,?>> waiting = Collections.synchronizedSet(new LinkedHashSet<DBEntry<?,?>>());
@@ -163,9 +168,9 @@ public final class PropertyDB {
 				oos.close();
 			} catch (FileNotFoundException e) {
 				//TODO Don't really like this
-				try {handler.handle(new DatabaseException("FileNotFoundException while saving property: " + fieldName + " version " + version));} catch (Exception e1) {}
+				try {handler.handle(new DatabaseException("FileNotFoundException while saving property: " + fieldName + " version " + version, e));} catch (Exception e1) {}
 			} catch (IOException e) {
-				try {handler.handle(new DatabaseException("IOException while saving property: " + fieldName + " version " + version));} catch (Exception e1) {}
+				try {handler.handle(new DatabaseException("IOException while saving property: " + fieldName + " version " + version, e));} catch (Exception e1) {}
 			}
 		}
 		
@@ -199,8 +204,6 @@ public final class PropertyDB {
 		return new File(directory.getAbsolutePath(), fieldName + "_" + version + ".property");
 	}
 	
-	// TODO add version checking method
-	
 	/**
 	 * Checks if a property exists before loading it
 	 * @param directory Location in which properties are stored (can be different for different properties)
@@ -228,8 +231,16 @@ public final class PropertyDB {
 		
 		final MutableProperty<T> property;
 		final File location = getPropertyLocation(fieldName, version, directory);
+		String canonical = null;
 		
 		try {
+			canonical = location.getCanonicalPath();
+			
+			if (INSTANCE.locations.containsKey(canonical)) {
+				handler.handle(new DatabaseException("Property already loaded: " + fieldName + " version " + version));
+				return null;
+			}
+			
 			if (location.exists()) {
 				ObjectInputStream ois = new ObjectInputStream(new FileInputStream(location));
 				Object obj = ois.readObject();
@@ -241,13 +252,13 @@ public final class PropertyDB {
 				property = MutableProperty.newProperty(initialValue);
 			}
 		} catch (ClassCastException e) {
-			handler.handle(new DatabaseException("ClassCastException while loading property: " + fieldName + " version " + version));
+			handler.handle(new DatabaseException("ClassCastException while loading property: " + fieldName + " version " + version, e));
 			return null;
 		} catch (ClassNotFoundException e) {
-			handler.handle(new DatabaseException("ClassNotFoundException while loading property: " + fieldName + " version " + version));
+			handler.handle(new DatabaseException("ClassNotFoundException while loading property: " + fieldName + " version " + version, e));
 			return null;
 		} catch (IOException e) {
-			handler.handle(new DatabaseException("IOException while loading property: " + fieldName + " version " + version));
+			handler.handle(new DatabaseException("IOException while loading property: " + fieldName + " version " + version, e));
 			return null;
 		}
 		
@@ -259,6 +270,7 @@ public final class PropertyDB {
 		entry.location = location;
 		
 		INSTANCE.entries.put(property, entry);
+		INSTANCE.locations.put(canonical, entry);
 		
 		property.addObserver(new PropertyObserver<T>() {
 			private final InitializationToken token = INSTANCE.token;
