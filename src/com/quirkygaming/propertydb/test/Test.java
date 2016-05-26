@@ -20,6 +20,8 @@ public class Test {
 	// set {propertyName} {value}
 	// get {propertyName}
 	// update {propertyName}
+	// delete {propertyName}
+	// unload {propertyName}
 	
 	static InitializationToken token;
 	static final File DIR = new File("/tmp/test_db/");
@@ -49,14 +51,21 @@ public class Test {
 			} else if (cmd[0].equals("close")) {
 				PropertyDB.closeDatabase(token);
 			} else if (cmd[0].equals("init")) {
-				props.put(cmd[1], PropertyDB.initiateProperty(DIR, cmd[1], 1, 0, ErrorHandler.logAll(System.err)));
+				props.put(cmd[1], PropertyDB.initiateProperty(DIR, cmd[1], 1, 0, ErrorHandler.logAll(System.err, true)));
 			} else if (cmd[0].equals("set")) {
 				props.get(cmd[1]).set(Integer.parseInt(cmd[2]));
 			} else if (cmd[0].equals("get")) {
 				System.out.println(props.get(cmd[1]).get());
 			} else if (cmd[0].equals("update")) {
 				props.get(cmd[1]).update();
+			} else if (cmd[0].equals("delete")) {
+				PropertyDB.deleteProperty(props.get(cmd[1]), ErrorHandler.logAll(System.err, true));
+				props.remove(cmd[1]);
+			} else if (cmd[0].equals("unload")) {
+				PropertyDB.unloadProperty(props.get(cmd[1]), ErrorHandler.logAll(System.err, true));
+				props.remove(cmd[1]);
 			}
+			
 		}
 		
 		System.out.println("Exiting");

@@ -21,6 +21,7 @@ import com.quirkygaming.propertylib.MutableProperty;
 import com.quirkygaming.propertylib.Property;
 import com.quirkygaming.propertylib.PropertyObserver;
 import com.quirkygaming.propertylib.PropertyObserver.EventType;
+import com.sun.xml.internal.bind.v2.TODO;
 
 /**
  * Main API class; meant for static access
@@ -154,8 +155,14 @@ public final class PropertyDB {
 		
 		MutableProperty<T> mutable;
 		File location;
+		transient String canonicalPath = null;
 		ErrorHandler<E> handler;
 		String fieldName; long version;
+		transient PropertyObserver<T> propertyObserver = null;
+		
+		void killObserver() {
+			mutable.removeObserver(propertyObserver);
+		}
 		
 		synchronized void save() {
 			try {
@@ -268,11 +275,12 @@ public final class PropertyDB {
 		entry.mutable = property;
 		entry.handler = handler;
 		entry.location = location;
+		entry.canonicalPath = canonical;
 		
 		INSTANCE.entries.put(property, entry);
 		INSTANCE.locations.put(canonical, entry);
 		
-		property.addObserver(new PropertyObserver<T>() {
+		entry.propertyObserver = new PropertyObserver<T>() {
 			private final InitializationToken token = INSTANCE.token;
 			
 			public void onChange(Property<T> modifiedProperty, EventType type) {
@@ -283,9 +291,66 @@ public final class PropertyDB {
 					}
 				}
 			}
-		}, EventType.SET, EventType.UPDATE);
+		};
+		
+		property.addObserver(entry.propertyObserver, EventType.SET, EventType.UPDATE);
 		
 		return property;
+	}
+	
+	public static <E extends Exception> void deleteProperty(File directory, final String fieldName, final long version, final ErrorHandler<E> handler) throws E {
+		if (!initialized()) throw new IllegalInitializationException("Database not initialized!");
+		final File location = getPropertyLocation(fieldName, version, directory);
+		String canonical = null;
+		
+		try {
+			canonical = location.getCanonicalPath();
+		} catch (IOException e) {
+			handler.handle(new DatabaseException("IOException while deleting property: " + fieldName + " version " + version, e));
+			return;
+		}
+		
+		if (INSTANCE.locations.containsKey(canonical)) {
+			// Unload then delete
+			deleteProperty(INSTANCE.locations.get(canonical).mutable, handler);
+		} else {
+			try {
+				Files.delete(location.toPath());
+			} catch (IOException e) {
+				handler.handle(new DatabaseException("IOException while deleting property: " + fieldName + " version " + version, e));
+			}
+		}
+	}
+	
+	public static <E extends Exception> void deleteProperty(MutableProperty<?> property, final ErrorHandler<E> handler) throws E {
+		if (!initialized()) throw new IllegalInitializationException("Database not initialized!");
+		DBEntry<?, ?> entry = INSTANCE.entries.get(property);
+		
+		File result = unloadProperty(property, handler);
+		
+		if (result == null) return; // Doesn't exist, handled already
+		
+		try {
+			Files.delete(entry.location.toPath());
+		} catch (IOException e) {
+			handler.handle(new DatabaseException("IOException while deleting property: " + entry.fieldName + " version " + entry.version, e));
+		}
+	}
+
+	public static <E extends Exception> File unloadProperty(MutableProperty<?> property, final ErrorHandler<E> handler) throws E {
+		if (!initialized()) throw new IllegalInitializationException("Database not initialized!");
+		
+		if (INSTANCE.entries.containsKey(property)) {
+			DBEntry<?, ?> entry = INSTANCE.entries.get(property);
+			entry.killObserver(); // Remove observer so it no longer responds to updates
+			if (INSTANCE.waiting.contains(entry)) INSTANCE.saveProperties();
+			INSTANCE.locations.remove(entry.canonicalPath);
+			INSTANCE.entries.remove(entry.mutable);
+			return entry.location;
+		} else {
+			handler.handle(new DatabaseException("Attempted to unload a property that was not loaded"));
+			return null;
+		}
 	}
 	
 	// Assertion debugging methods
