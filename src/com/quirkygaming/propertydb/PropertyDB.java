@@ -239,6 +239,8 @@ public final class PropertyDB {
 		final File location = getPropertyLocation(fieldName, version, directory);
 		String canonical = null;
 		
+		boolean created = false;
+		
 		try {
 			canonical = location.getCanonicalPath();
 			
@@ -256,6 +258,7 @@ public final class PropertyDB {
 			} else {
 				assert debug("Created " + fieldName);
 				property = MutableProperty.newProperty(initialValue);
+				created = true;
 			}
 		} catch (ClassCastException e) {
 			handler.handle(new DatabaseException("ClassCastException while loading property: " + fieldName + " version " + version, e));
@@ -278,6 +281,11 @@ public final class PropertyDB {
 		
 		INSTANCE.entries.put(property, entry);
 		INSTANCE.locations.put(canonical, entry);
+		if (created) {
+			synchronized (INSTANCE.waiting) {
+				INSTANCE.waiting.add(entry); // Initial save
+			}
+		}
 		
 		entry.propertyObserver = new PropertyObserver<T>() {
 			private final InitializationToken token = INSTANCE.token;
