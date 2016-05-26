@@ -139,6 +139,14 @@ public abstract class Property<T> implements Serializable {
 		if (observers == null) observers = new Observer<T>();
 		observers.addHandler(observer, types);
 	}
+	
+	/**
+	 * Removes a PropertyObserver
+	 */
+	public void removeObserver(PropertyObserver<T> observer) {
+		if (observers == null) observers = new Observer<T>();
+		observers.removeHandler(observer);
+	}
 }
 
 class PropertyImpl<T> extends Property<T> implements Serializable {
@@ -295,5 +303,11 @@ class Observer<T> {
 				case UPDATE: observers_UPDATE.add(o); break;
 			}
 		}
+	}
+	
+	protected void removeHandler(PropertyObserver<T> o) {
+		observers_GET.remove(o);
+		observers_SET.remove(o);
+		observers_UPDATE.remove(o);
 	}
 }
