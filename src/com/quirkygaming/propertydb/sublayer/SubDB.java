@@ -78,6 +78,11 @@ public final class SubDB<E extends Exception> {
 		}
 	}
 	
+	public <T extends Serializable> MutableProperty<T> getOrInitiateProperty(String fieldName, long version, T initialValue) throws E {
+		if (isLoaded(fieldName)) return getLoadedProperty(fieldName);
+		else return initiateProperty(fieldName, version, initialValue);
+	}
+	
 	public boolean isLoaded(String fieldName) {
 		return fieldMap.containsKey(fieldName);
 	}
