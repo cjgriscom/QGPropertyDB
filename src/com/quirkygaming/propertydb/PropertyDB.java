@@ -218,7 +218,35 @@ public final class PropertyDB {
 	 * @return
 	 */
 	public static boolean propertyExists(File directory, String fieldName, long version) {
-		return getPropertyLocation(fieldName, version, directory).exists();
+		// Loaded must be checked in case the save cycle has not gone through yet
+		return getPropertyLocation(fieldName, version, directory).exists() || loaded(fieldName, version);
+	}
+	
+	/**
+	 * Checks if a property is loaded
+	 * @param fieldName Name of the property
+	 * @return
+	 */
+	public static boolean loaded(String fieldName) {
+		if (!initialized()) return false;
+		for (DBEntry<?,?> entry : INSTANCE.entries.values()) {
+			if (entry.fieldName.equals(fieldName)) return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Checks if a property is loaded
+	 * @param fieldName Name of the property
+	 * @param version Property version
+	 * @return
+	 */
+	public static boolean loaded(String fieldName, long version) {
+		if (!initialized()) return false;
+		for (DBEntry<?,?> entry : INSTANCE.entries.values()) {
+			if (entry.version == version && entry.fieldName.equals(fieldName)) return true;
+		}
+		return false;
 	}
 	
 	/**
