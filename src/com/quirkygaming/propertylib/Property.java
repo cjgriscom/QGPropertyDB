@@ -116,6 +116,15 @@ public abstract class Property<T> implements Serializable {
 	 * @return The value
 	 */
 	public abstract T get();
+
+	/**
+	 * Use this method to signal a (potential) change to the contents of the property.
+	 * All PropertyObservers that registered the UPDATE event will be notified of the update.
+	 * 
+	 */
+	public void update() {
+		signal(EventType.UPDATE);
+	}
 	
 	/**
 	 * Checks if the contents of this property equals an object.

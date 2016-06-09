@@ -47,15 +47,6 @@ public class MutableProperty<T> extends BoundProperty<T> implements Serializable
 	}
 	
 	/**
-	 * Use this method to signal a (potential) change to the contents of the property.
-	 * All PropertyObservers that registered the UPDATE event will be notified of the update.
-	 * 
-	 */
-	public void update() {
-		signal(EventType.UPDATE);
-	}
-	
-	/**
 	 * Returns an immutable (Property) version of this MutableProperty.
 	 * 
 	 * @return The immutable version

@@ -56,18 +56,4 @@ public class Mutator implements Serializable {
 		}
 	}
 	
-	/**
-	 * Use this method to signal a (potential) change to the contents of the property.
-	 * All PropertyObservers that registered the UPDATE event will be notified of the update.
-	 * 
-	 * @param property The Property to be signaled
-	 */
-	public <T> void update(Property<T> property) {
-		if (property instanceof MutableProperty || property.mutator == this) {
-			property.signal(EventType.UPDATE);
-		} else {
-			throw new RuntimeException("Caller attempted to illegally update property with mutator");
-		}
-	}
-	
 }
