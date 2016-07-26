@@ -32,6 +32,8 @@ public final class SubDB<E extends Exception> {
 				directory, "SubDB_" + name, ROOT_VERSION, new TreeMap<String, SubEntryData>(), handler);
 	}
 	
+	public String getName() {return name;}
+	
 	public boolean propertyExists(String fieldName) throws E {
 		return index.get().containsKey(fieldName);
 	}
@@ -81,6 +83,13 @@ public final class SubDB<E extends Exception> {
 	public <T extends Serializable> MutableProperty<T> getOrInitiateProperty(String fieldName, long version, T initialValue) throws E {
 		if (isLoaded(fieldName)) return getLoadedProperty(fieldName);
 		else return initiateProperty(fieldName, version, initialValue);
+	}
+	
+	// This loads and unloads a property, returning its value
+	public <T extends Serializable> T getAndCloseLoadedProperty(String fieldName, long version, T initialValue) throws E {
+		MutableProperty<T> property = getOrInitiateProperty(fieldName, version, initialValue);
+		unloadProperty(property);
+		return property.get();
 	}
 	
 	public boolean isLoaded(String fieldName) {
