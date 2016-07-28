@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -33,6 +34,21 @@ public final class SubDB<E extends Exception> {
 	}
 	
 	public String getName() {return name;}
+	
+	public void destroySubDB() throws E {
+		// Delete loaded properties
+		Iterator<MutableProperty<?>> iterator = fieldMap.values().iterator();
+		while (iterator.hasNext()) {
+			deleteProperty(iterator.next());
+		}
+		// Delete unloaded properties
+		Iterator<String> iterator2 = index.get().keySet().iterator();
+		while (iterator2.hasNext()) {
+			deleteProperty(iterator2.next());
+		}
+		index = null;
+		PropertyDB.deleteProperty(directory, "SubDB_" + name, ROOT_VERSION, handler);
+	}
 	
 	public boolean propertyExists(String fieldName) throws E {
 		return index.get().containsKey(fieldName);
@@ -86,7 +102,7 @@ public final class SubDB<E extends Exception> {
 	}
 	
 	// This loads and unloads a property, returning its value
-	public <T extends Serializable> T getAndCloseLoadedProperty(String fieldName, long version, T initialValue) throws E {
+	public <T extends Serializable> T getAndCloseProperty(String fieldName, long version, T initialValue) throws E {
 		MutableProperty<T> property = getOrInitiateProperty(fieldName, version, initialValue);
 		unloadProperty(property);
 		return property.get();
