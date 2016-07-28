@@ -4,18 +4,19 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import com.quirkygaming.errorlib.ErrorHandler;
 import com.quirkygaming.propertydb.DatabaseException;
+import com.quirkygaming.propertydb.InitializationToken;
 import com.quirkygaming.propertydb.PropertyDB;
 import com.quirkygaming.propertylib.MutableProperty;
 
 public final class SubDB<E extends Exception> {
 	
+	boolean closed = false;
 	Map<String, MutableProperty<?>> fieldMap = new TreeMap<>();
 	Map<MutableProperty<?>, String> fieldMapReverse = new HashMap<>();
 	
@@ -35,30 +36,43 @@ public final class SubDB<E extends Exception> {
 	
 	public String getName() {return name;}
 	
+	private synchronized boolean closed() throws E {
+		if (closed) {
+			handler.handle(new DatabaseException("SubDB has been destroyed!"));
+			return true;
+		}
+		return false;
+	}
+	
 	public void destroySubDB() throws E {
+		if (closed()) return;
 		// Delete loaded properties
-		Iterator<MutableProperty<?>> iterator = fieldMap.values().iterator();
-		while (iterator.hasNext()) {
-			deleteProperty(iterator.next());
+		Object[] copy = fieldMapReverse.keySet().toArray();
+		for (Object o : copy) {
+			deleteProperty((MutableProperty<?>) o);
 		}
 		// Delete unloaded properties
-		Iterator<String> iterator2 = index.get().keySet().iterator();
-		while (iterator2.hasNext()) {
-			deleteProperty(iterator2.next());
+		copy = index.get().keySet().toArray();
+		for (Object o : copy) {
+			deleteProperty((String) o);
 		}
-		index = null;
+		closed = true;
 		PropertyDB.deleteProperty(directory, "SubDB_" + name, ROOT_VERSION, handler);
+
 	}
 	
 	public boolean propertyExists(String fieldName) throws E {
+		if (closed) return false;
 		return index.get().containsKey(fieldName);
 	}
 	
 	public boolean propertyExists(String fieldName, long version) throws E {
+		if (closed) return false;
 		return PropertyDB.propertyExists(directory, wrapName(fieldName), version);
 	}
 	
 	public long propertyVersion(String fieldName) throws E {
+		if (closed()) return -1;
 		if (!index.get().containsKey(fieldName)) {
 			handler.handle(new DatabaseException("Subdatabase property " + fieldName + " does not exist!"));
 			return -1L;
@@ -68,21 +82,24 @@ public final class SubDB<E extends Exception> {
 	}
 	
 	public <T extends Serializable> MutableProperty<T> initiateProperty(String fieldName, long version, T initialValue) throws E {
+		if (closed()) return null;
 		SubEntryData data = new SubEntryData(version);
 
 		index.get().put(fieldName, data);
 		index.update();
-		
-		MutableProperty<T> mutable = PropertyDB.initiateProperty(directory, wrapName(fieldName), version, initialValue, handler);
-		
+
+		MutableProperty<T> mutable = PropertyDB.initiateProperty(directory, wrapName(fieldName), version, initialValue,
+				handler);
+
 		fieldMap.put(fieldName, mutable);
 		fieldMapReverse.put(mutable, fieldName); // Insert into cache maps
-		
+
 		return mutable;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public <T extends Serializable> MutableProperty<T> getLoadedProperty(String fieldName) throws E {
+		if (closed()) return null;
 		if (!fieldMap.containsKey(fieldName)) {
 			handler.handle(new DatabaseException("Subdatabase property " + fieldName + " is not loaded!"));
 			return null;
@@ -103,16 +120,19 @@ public final class SubDB<E extends Exception> {
 	
 	// This loads and unloads a property, returning its value
 	public <T extends Serializable> T getAndCloseProperty(String fieldName, long version, T initialValue) throws E {
+		if (closed()) return null;
 		MutableProperty<T> property = getOrInitiateProperty(fieldName, version, initialValue);
 		unloadProperty(property);
 		return property.get();
 	}
 	
 	public boolean isLoaded(String fieldName) {
+		if (closed) return false;
 		return fieldMap.containsKey(fieldName);
 	}
 	
 	public void deleteProperty(String fieldName) throws E {
+		if (closed()) return;
 		if (!index.get().containsKey(fieldName)) {
 			handler.handle(new DatabaseException("Subdatabase property " + fieldName + " does not exist!"));
 			return;
@@ -128,6 +148,7 @@ public final class SubDB<E extends Exception> {
 	}
 	
 	public void deleteProperty(MutableProperty<?> property) throws E {
+		if (closed()) return;
 		if (!fieldMapReverse.containsKey(property)) {
 			handler.handle(new DatabaseException("Requested property does not exist in this subdatabase!"));
 		} else {
@@ -139,6 +160,7 @@ public final class SubDB<E extends Exception> {
 	}
 	
 	public void unloadProperty(String fieldName) throws E {
+		if (closed()) return;
 		if (!fieldMap.containsKey(fieldName)) {
 			handler.handle(new DatabaseException("Subdatabase property " + fieldName + " is not loaded!"));
 			return;
@@ -150,6 +172,7 @@ public final class SubDB<E extends Exception> {
 	}
 	
 	public void unloadProperty(MutableProperty<?> property) throws E {
+		if (closed()) return;
 		if (!fieldMapReverse.containsKey(property)) {
 			handler.handle(new DatabaseException("Requested property does not exist in this subdatabase!"));
 		} else {
@@ -158,7 +181,8 @@ public final class SubDB<E extends Exception> {
 		}
 	}
 	
-	public List<String> getPropertyList() {
+	public List<String> getPropertyList() throws E {
+		if (closed()) return null;
 		return new ArrayList<String>(index.get().keySet());
 	}
 	
