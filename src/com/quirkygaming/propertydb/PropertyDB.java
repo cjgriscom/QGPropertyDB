@@ -63,7 +63,7 @@ public final class PropertyDB {
 	 * @throws IllegalInitializationException if the DB is already initialized
 	 */
 	public static InitializationToken initializeDB(int period_millis) throws IllegalInitializationException {
-		return initializeDB(period_millis, new DefaultScheduler());
+		return initializeDB(new DefaultScheduler(period_millis));
 	}
 	
 	/**
@@ -77,13 +77,13 @@ public final class PropertyDB {
 	 * @return The token used to control the database, usually the main loop of a program or a Bukkit plugin
 	 * @throws IllegalInitializationException if the DB is already initialized
 	 */
-	public static InitializationToken initializeDB(int period_millis, CustomScheduler scheduler) throws IllegalInitializationException {
+	public static InitializationToken initializeDB(CustomScheduler scheduler) throws IllegalInitializationException {
 		if (INSTANCE == null) {
-			assert debug("Initialized DB with " + period_millis + "ms period");
+			assert debug("Initialized DB");
 			INSTANCE = new PropertyDB();
 			INSTANCE.token = new InitializationToken();
 			INSTANCE.scheduler = scheduler;
-			scheduler.scheduleRepeatingTask(INSTANCE.token, period_millis, new Runnable(){
+			scheduler.scheduleRepeatingTask(INSTANCE.token, new Runnable(){
 				final InitializationToken token = INSTANCE.token;
 				
 				public void run() {
@@ -428,9 +428,14 @@ final class DefaultScheduler implements CustomScheduler {
 	
 	Thread t;
 	boolean saving = false;
+	final int period_millis;
 	
+	public DefaultScheduler(int period_millis) {
+		this.period_millis = period_millis;
+		assert PropertyDB.debug("Using default schuduler at a period of " + period_millis + " ms.");
+	}
 	@Override
-	public void scheduleRepeatingTask(final InitializationToken token, final int period_millis, final Runnable r) {
+	public void scheduleRepeatingTask(final InitializationToken token, final Runnable r) {
 		t = new Thread(new Runnable() {
 			@Override
 			public void run() {

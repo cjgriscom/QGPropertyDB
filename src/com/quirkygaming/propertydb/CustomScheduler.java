@@ -8,12 +8,11 @@ package com.quirkygaming.propertydb;
 public interface CustomScheduler {
 	/**
 	 * Override to provide the "save clock" at a given period. This method will be called upon initialzation
-	 * and implementors should set up a repeating synchronized event or async thread to run at an interval (i.e. 5-30 seconds)
+	 * and implementors should set up a repeating synchronized event or async thread to run regularly
 	 * @param token The initialization token; can be used to verify that the database is still active
-	 * @param period_millis Passes the period requested by PropertyDB.initialize; can be ignored for custom implementations (but make sure you use a reasonable period)
 	 * @param saveRoutine Invoke this runnable to perform the save sequence
 	 */
-	public void scheduleRepeatingTask(InitializationToken token, int period_millis, Runnable saveRoutine);
+	public void scheduleRepeatingTask(InitializationToken token, Runnable saveRoutine);
 	
 	/**
 	 * Will be called when the database is disabled but the final save has not yet occured. 
