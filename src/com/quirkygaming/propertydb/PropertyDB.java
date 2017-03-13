@@ -427,7 +427,6 @@ public final class PropertyDB {
 final class DefaultScheduler implements CustomScheduler {
 	
 	Thread t;
-	Object savelock = new Object();
 	boolean saving = false;
 	
 	@Override
@@ -439,7 +438,7 @@ final class DefaultScheduler implements CustomScheduler {
 					try {
 						Thread.sleep(period_millis);
 						assert PropertyDB.debug("Completed sleep; Token:" + token.valid());
-						synchronized (savelock) {
+						synchronized (this) {
 							saving = true;
 							r.run();
 							saving = false;
@@ -457,7 +456,7 @@ final class DefaultScheduler implements CustomScheduler {
 	@Override
 	public synchronized void onDatabaseClose() {
 		if (t == null) return;
-		synchronized (savelock) {
+		synchronized (this) {
 			if (!saving) { // Interrupt sleep
 				assert PropertyDB.debug("Calling Interrupt");
 				t.interrupt();
