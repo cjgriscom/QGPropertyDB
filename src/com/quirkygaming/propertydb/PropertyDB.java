@@ -181,8 +181,9 @@ public final class PropertyDB {
 				ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(location));
 				synchronized(mutable) {
 					oos.writeObject(mutable);
-					oos.close();
 				}
+				oos.close();
+				
 			} catch (FileNotFoundException e) {
 				//TODO Don't really like this
 				try {handler.handle(new DatabaseException("FileNotFoundException while saving property: " + fieldName + " version " + version, e));} catch (Exception e1) {}
