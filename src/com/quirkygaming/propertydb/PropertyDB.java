@@ -23,7 +23,16 @@ import com.quirkygaming.propertylib.PropertyObserver;
 import com.quirkygaming.propertylib.PropertyObserver.EventType;
 
 /**
- * Main API class; meant for static access
+ * Main API class; meant for static access.
+ * PropertyDB must be initialized using either the default async scheduler or a custom one.
+ * If an async scheduler is used, all object writes must be performed in synchronized blocks as follows:
+ *
+ * synchronized(mutableProperty) { // Lock the object to prevent inconsistent states from being written
+ *   // Perform modifications
+ *   mutableProperty.get().modify()...
+ * }
+ * mutableProperty.update(); // Signal PropertyDB to write changes
+ * 
  * @author chandler
  *
  */
@@ -170,8 +179,10 @@ public final class PropertyDB {
 					new File(location.getParent()).mkdirs();
 				}
 				ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(location));
-				oos.writeObject(mutable);
-				oos.close();
+				synchronized(mutable) {
+					oos.writeObject(mutable);
+					oos.close();
+				}
 			} catch (FileNotFoundException e) {
 				//TODO Don't really like this
 				try {handler.handle(new DatabaseException("FileNotFoundException while saving property: " + fieldName + " version " + version, e));} catch (Exception e1) {}
@@ -250,7 +261,16 @@ public final class PropertyDB {
 	}
 	
 	/**
-	 * Creates or loads the specified property
+	 * Creates or loads the specified property.  
+	 * If an async scheduler is being used, properties must be modified inside a synchronized
+	 *      block that locks the MutableProperty's monitor: i.e.:
+	 * 
+	 * synchronized(mutableProperty) { // Lock the object to prevent inconsistent states from being written
+	 *   // Perform modifications
+	 *   mutableProperty.get().modify()...
+	 * }
+	 * mutableProperty.update(); // Signal PropertyDB to write changes
+	 * 
 	 * @param directory Location in which properties are stored (can be different for different properties)
 	 * @param fieldName Name of the property
 	 * @param version Version, used for checking existence of previous versions
