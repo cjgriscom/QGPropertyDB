@@ -1,4 +1,4 @@
-package com.quirkygaming.propertydb.test;
+package com.quirkygaming.propertydb;
 
 import java.io.File;
 
