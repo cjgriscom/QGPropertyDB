@@ -1,2 +1,2 @@
-# PropertyDB
-A light serializing database based on PropertyLib
+# QGPropertyDB
+Lightweight serializing database for persistent object storage
